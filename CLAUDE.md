@@ -19,7 +19,7 @@ TeamBoard — internal team directory. Express + React + SQLite.
 - POST /api/members — create member (name, email, role, department, start_date)
 - GET /api/members/:id — get member by ID
 - PATCH /api/members/:id — update member fields
-- DELETE /api/members/:id — remove member
+- DELETE /api/members/:id — deactivate member (sets is_active = 0, prefixes email with deactivated-)
 - GET /api/members/export — CSV export (HR integration)
 - GET /api/members/stats — team statistics by department
 
