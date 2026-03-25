@@ -13,7 +13,7 @@ interface MemberRow {
   updated_at: string;
 }
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
   const db = getDb();
