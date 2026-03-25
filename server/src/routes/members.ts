@@ -106,13 +106,13 @@ router.patch('/:id', (req: Request, res: Response): void => {
 router.delete('/:id', (req: Request, res: Response): void => {
   const db = getDb();
   const member = db.prepare(
-    'SELECT * FROM members WHERE id = ?'
+    'SELECT * FROM members WHERE id = ? AND is_active = 1'
   ).get(Number(req.params.id)) as unknown as MemberRow | undefined;
   if (!member) {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
+  db.prepare("UPDATE members SET is_active = 0, updated_at = datetime('now') WHERE id = ?").run(member.id);
   res.json({ success: true });
 });
 
