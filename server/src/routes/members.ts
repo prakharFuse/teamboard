@@ -47,10 +47,10 @@ router.post('/', (req: Request, res: Response): void => {
 
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
-  const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
+  const rows = db.prepare('SELECT id, name, email, role, department, start_date, is_active FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
   const header = 'id,name,email,role,department,start_date,is_active';
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
+    `${r.id},"${r.name}",${r.email},"${r.role}","${r.department}",${r.start_date},${r.is_active}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
