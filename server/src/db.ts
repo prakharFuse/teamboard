@@ -25,6 +25,12 @@ export function getDb(): DatabaseSync {
       )
     `);
 
+    // Migration: rename legacy dept_code column to department
+    const cols = db.prepare("PRAGMA table_info(members)").all() as { name: string }[];
+    if (cols.some(c => c.name === 'dept_code')) {
+      db.exec('ALTER TABLE members RENAME COLUMN dept_code TO department');
+    }
+
     const count = db.prepare('SELECT COUNT(*) as count FROM members').get() as unknown as { count: number };
     if (count.count === 0) {
       const insert = db.prepare(
