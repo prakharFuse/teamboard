@@ -112,7 +112,16 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
+  // Guard: already inactive
+  if (member.is_active === 0) {
+    res.status(409).json({ error: 'Member is already inactive' });
+    return;
+  }
+  // Soft delete: deactivate and prefix email for Okta SSO revocation
+  const deactivatedEmail = `deactivated-${member.email}`;
+  db.prepare(
+    `UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?`
+  ).run(deactivatedEmail, member.id);
   res.json({ success: true });
 });
 
