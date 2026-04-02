@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical BambooHR dept_code constants (source of truth)
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -77,6 +78,13 @@ teamboard/
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
+### Department Codes
+
+- **Source of truth**: `server/src/departments.ts` exports `DEPT_MAP` (a `Record<string, string>` of 9 BambooHR dept_codes → display names: `ENG`, `PRD`, `DSN`, `MKT`, `SLS`, `OPS`, `FIN`, `HR`, `LEG`) and `VALID_DEPT_CODES` (the key array used for route validation).
+- **Client mirror**: `client/src/App.tsx` contains a `DEPT_MAP` constant with the identical 9 entries. It is used to render friendly department names in the UI and to populate the department `<select>` dropdown. **Keep both in sync** — if codes are added or removed, update `server/src/departments.ts` first, then `client/src/App.tsx`.
+- All `POST /api/members` and `PATCH /api/members/:id` requests validate the `department` field against `VALID_DEPT_CODES` and return a `400` listing the allowed codes if the value is unrecognised.
+- The CSV export (`GET /api/members/export`) uses the header label `dept_code` for the 5th column (column order is otherwise unchanged — BambooHR reads by position).
+
 ### Client
 
 - **Single component**: All logic lives in `App.tsx` — `useState` for form fields, members list, stats, and UI visibility.
@@ -92,7 +100,7 @@ CREATE TABLE members (
   name        TEXT    NOT NULL,
   email       TEXT    NOT NULL UNIQUE,
   role        TEXT    NOT NULL,
-  department  TEXT    NOT NULL,
+  department  TEXT    NOT NULL,             -- stores BambooHR dept_code (e.g. 'ENG'), NOT free-text names; see server/src/departments.ts
   start_date  TEXT    NOT NULL,             -- ISO date string: YYYY-MM-DD
   is_active   INTEGER NOT NULL DEFAULT 1,   -- 1 = active, 0 = inactive
   created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -102,18 +110,18 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores BambooHR dept_codes (e.g. `ENG`, `PRD`). The canonical mapping of codes → display names lives in `server/src/departments.ts`.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`; `department` must be a valid BambooHR dept_code (returns 400 with allowed codes on failure) |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`; if `department` is provided it must be a valid BambooHR dept_code (returns 400 with allowed codes on failure) |
 | DELETE | `/api/members/:id` | Hard delete member |
-| GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
+| GET | `/api/members/export` | Download all members as CSV (`members.csv`); column order: `id, name, email, role, dept_code, start_date, is_active` (5th column is `dept_code`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
