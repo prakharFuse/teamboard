@@ -69,6 +69,7 @@ teamboard/
 ### Server
 
 - **Singleton DB**: `getDb()` in `db.ts` lazily initializes a single `DatabaseSync` instance. `data/` directory is auto-created. The `members` table is seeded with 8 sample members only if empty.
+- **Department code registry**: `server/src/departments.ts` is the canonical source of truth for BambooHR department codes (9 code→name pairs: ENG, PRD, DSN, MKT, SLS, OPS, FIN, HR, LEG). The POST and PATCH handlers in `routes/members.ts` validate the `department` field against this registry; invalid codes return HTTP 400 with the list of allowed codes.
 - **Module imports**: Server uses `NodeNext` module resolution — all local imports must include the `.js` extension (e.g., `import { getDb } from '../db.js'`).
 - **Route handlers** are explicitly typed as `(req: Request, res: Response): void`.
 - **SQL**: Always use parameterized queries with `?` placeholders. Never use string concatenation for SQL.
@@ -115,6 +116,7 @@ CREATE TABLE members (
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/departments` | Returns all valid BambooHR department code→name mappings |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
 
