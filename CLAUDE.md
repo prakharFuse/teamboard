@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — BambooHR dept_code/dept_name mapping + validation
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -92,7 +93,7 @@ CREATE TABLE members (
   name        TEXT    NOT NULL,
   email       TEXT    NOT NULL UNIQUE,
   role        TEXT    NOT NULL,
-  department  TEXT    NOT NULL,
+  department  TEXT    NOT NULL,             -- stores BambooHR dept_code (e.g., 'ENG'), not a display name; see departments.ts for the full code→name mapping
   start_date  TEXT    NOT NULL,             -- ISO date string: YYYY-MM-DD
   is_active   INTEGER NOT NULL DEFAULT 1,   -- 1 = active, 0 = inactive
   created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -102,7 +103,6 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
 
 ## API Endpoints
 
