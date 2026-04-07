@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DEPARTMENT_CODES, VALID_DEPT_CODES } from './departments.js';
 
 interface Member {
   id: number;
@@ -98,7 +99,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value="">Select Department</option>
+                  {VALID_DEPT_CODES.map(code => (
+                    <option key={code} value={code}>{DEPARTMENT_CODES[code]}</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
@@ -122,7 +128,7 @@ function App() {
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
-                  <td><span className="dept-badge">{m.department}</span></td>
+                  <td><span className="dept-badge">{DEPARTMENT_CODES[m.department] ?? m.department}</span></td>
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
@@ -143,7 +149,7 @@ function App() {
               <ul className="dept-list">
                 {stats.byDepartment.map(d => (
                   <li key={d.department}>
-                    <span>{d.department}</span>
+                    <span>{DEPARTMENT_CODES[d.department] ?? d.department}</span>
                     <span className="count">{d.count}</span>
                   </li>
                 ))}

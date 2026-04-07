@@ -92,7 +92,7 @@ CREATE TABLE members (
   name        TEXT    NOT NULL,
   email       TEXT    NOT NULL UNIQUE,
   role        TEXT    NOT NULL,
-  department  TEXT    NOT NULL,
+  department  TEXT    NOT NULL,             -- stores BambooHR dept_code (ENG, PRD, DSN, MKT, SLS, OPS, FIN, HR, LEG), NOT display names
   start_date  TEXT    NOT NULL,             -- ISO date string: YYYY-MM-DD
   is_active   INTEGER NOT NULL DEFAULT 1,   -- 1 = active, 0 = inactive
   created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -102,21 +102,54 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- `department` stores a BambooHR dept_code (e.g. `ENG`), not a human-readable display name. Use `DEPARTMENT_CODES[dept_code]` (from `server/src/departments.ts`) to resolve the display name.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`. `department` must be a valid dept_code (e.g. `ENG`) — invalid codes return 400. |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`. If `department` is provided it must be a valid dept_code — invalid codes return 400. |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+## Department Codes
+
+BambooHR requires department values to be sent as official dept_codes, not free-text display names. The canonical mapping is maintained in two mirrored module files — one for the server bundle, one for the client bundle:
+
+| File | Purpose |
+|------|---------|
+| `server/src/departments.ts` | Server-side constants and validation helper |
+| `client/src/departments.ts` | Client-side constants (identical values, separate bundle) |
+
+### Exports
+
+**Both files export:**
+
+- `DEPARTMENT_CODES: Record<string, string>` — maps dept_code → display name:
+  ```ts
+  { ENG: 'Engineering', PRD: 'Product', DSN: 'Design', MKT: 'Marketing',
+    SLS: 'Sales', OPS: 'Operations', FIN: 'Finance', HR: 'HR', LEG: 'Legal' }
+  ```
+- `VALID_DEPT_CODES: readonly string[]` — `Object.keys(DEPARTMENT_CODES)` for iteration and validation.
+
+**Server file additionally exports:**
+
+- `isValidDeptCode(code: string): boolean` — used by POST and PATCH route handlers to reject unknown codes.
+
+### Keeping in sync
+
+**Both files must always contain identical `DEPARTMENT_CODES` entries.** They are duplicated intentionally because the server and client are separate bundles. If BambooHR adds or removes department codes:
+
+1. Update the canonical list in `server/src/departments.ts`.
+2. Apply the same change to `client/src/departments.ts`.
+3. Update the seed data in `server/src/db.ts` if the affected code appears there.
+4. Follow the team process for adding new departments (BambooHR must be updated by People Ops first — see the knowledge base entry "Canonical department list").
 
 ## TypeScript Configuration
 
