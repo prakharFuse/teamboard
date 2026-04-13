@@ -102,21 +102,43 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores BambooHR `dept_code` values (e.g. `"ENG"`, `"PRD"`), not display names. See [Department Codes](#department-codes).
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`. `department` must be a valid `dept_code` (see [Department Codes](#department-codes)); invalid values return `400` with the allowed code list. |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`. If `department` is provided, it must be a valid `dept_code` (see [Department Codes](#department-codes)); invalid values return `400` with the allowed code list. |
 | DELETE | `/api/members/:id` | Hard delete member |
-| GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
+| GET | `/api/members/export` | Download all members as CSV (`members.csv`); CSV header uses `dept_code` column at position 5 (same position as the former `department` column — BambooHR reads by position) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+## Department Codes
+
+The `department` field stores BambooHR canonical **dept_codes** (not display names). Only the following 9 codes are accepted by the API:
+
+| Code | Display Name |
+|------|--------------|
+| ENG  | Engineering  |
+| PRD  | Product      |
+| DSN  | Design       |
+| MKT  | Marketing    |
+| SLS  | Sales        |
+| OPS  | Operations   |
+| FIN  | Finance      |
+| HR   | HR           |
+| LEG  | Legal        |
+
+**Source of truth:** `server/src/departments.ts` is the code-level source of truth, derived from the BambooHR canonical CSV supplied by People Ops. The client mirrors the same map in `client/src/App.tsx` (as `DEPARTMENT_MAP`) for display purposes only.
+
+- POST and PATCH requests with an unrecognized `department` value return `400` with the full list of allowed codes.
+- The CSV export uses `dept_code` as the column header (position 5) so BambooHR positional import recognises the values correctly.
+- If a new department is needed, it must be added in BambooHR first by People Ops, then added to `server/src/departments.ts`. Do not add it only in TeamBoard.
 
 ## TypeScript Configuration
 
