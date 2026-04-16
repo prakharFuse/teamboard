@@ -102,12 +102,15 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores BambooHR **dept_codes** (validated against `server/src/departments.ts`), not free-text display names. The UI resolves codes to human-readable names via the `/api/departments` mapping.
+
+> **Process note:** `dept_code` values in `server/src/departments.ts` must match the BambooHR-provided quarterly CSV; contact People Ops (#people-ops) to refresh when BambooHR updates the list.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | `/api/departments` | List valid BambooHR department codes and display names |
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
 | POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |

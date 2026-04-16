@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { isValidDeptCode, VALID_DEPT_CODES } from '../departments.js';
 
 interface MemberRow {
   id: number;
@@ -27,6 +28,10 @@ router.post('/', (req: Request, res: Response): void => {
   const { name, email, role, department, start_date } = req.body;
   if (!name || !email || !role || !department || !start_date) {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
+    return;
+  }
+  if (!isValidDeptCode(department)) {
+    res.status(400).json({ error: `Invalid department code '${department}'. Allowed values: ${VALID_DEPT_CODES.join(', ')}` });
     return;
   }
   const db = getDb();
@@ -90,6 +95,10 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
+  if (department !== undefined && department !== null && !isValidDeptCode(department)) {
+    res.status(400).json({ error: `Invalid department code '${department}'. Allowed values: ${VALID_DEPT_CODES.join(', ')}` });
+    return;
+  }
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
