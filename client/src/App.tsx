@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+// IMPORTANT: must mirror server/src/departments.ts exactly — see CLAUDE.md §Department Validation before editing.
+// Any change to this list must be coordinated with People Ops and BambooHR first.
 const DEPARTMENTS = [
   'Engineering',
   'Product',
@@ -111,7 +113,7 @@ function App() {
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
                 <select value={department} onChange={e => setDepartment(e.target.value)} required>
-                  <option value=''>Select department</option>
+                  <option value="">Select department</option>
                   {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
