@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical BambooHR department codes (VALID_DEPARTMENTS)
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -77,6 +78,17 @@ teamboard/
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
+### Department Validation
+
+- **Canonical source of truth**: `server/src/departments.ts` exports `VALID_DEPARTMENTS` (a readonly `string[]`) and a helper `isValidDepartment(dept: string): boolean`. This is the single place to update when department codes change.
+- **Valid department codes** (nine values, matching BambooHR exactly):
+  `Engineering`, `Product`, `Design`, `Marketing`, `Sales`, `Operations`, `Finance`, `HR`, `Legal`
+- **Enforced on writes**: `POST /api/members` and `PATCH /api/members/:id` both validate the `department` field against `VALID_DEPARTMENTS`. An invalid value returns **HTTP 400** with a JSON error body listing the allowed codes:
+  ```json
+  { "error": "Invalid department 'Eng'. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal" }
+  ```
+- **Adding a new department**: People Ops must add it in BambooHR first, then add the code to `VALID_DEPARTMENTS` in `server/src/departments.ts`. Do not add it only in TeamBoard — BambooHR will reject rows with unrecognised codes.
+
 ### Client
 
 - **Single component**: All logic lives in `App.tsx` — `useState` for form fields, members list, stats, and UI visibility.
@@ -102,7 +114,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- All seed data uses canonical department codes from `departments.ts`.
 
 ## API Endpoints
 
