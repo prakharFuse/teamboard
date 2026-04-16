@@ -102,7 +102,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores one of the 9 canonical BambooHR department codes enforced at the application layer (see [Department Validation](#department-validation) below). Startup migrations in `db.ts` normalise any pre-existing bad values (e.g. `'Eng'` → `'Engineering'`, `'Human Resources'` → `'HR'`).
 
 ## API Endpoints
 
@@ -117,6 +117,40 @@ CREATE TABLE members (
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+## Department Validation
+
+### Canonical source of truth
+
+`server/src/departments.ts` is the single source of truth for valid BambooHR department codes. It exports:
+
+- `VALID_DEPARTMENTS` — a readonly `as const` tuple of the 9 canonical names:
+  `Engineering`, `Product`, `Design`, `Marketing`, `Sales`, `Operations`, `Finance`, `HR`, `Legal`
+- `Department` — the union type derived from `VALID_DEPARTMENTS`
+- `isValidDepartment(dept: string): dept is Department` — a type-guard used by route handlers
+
+### API validation
+
+Both create and update endpoints reject non-canonical department values:
+
+| Endpoint | Behaviour for invalid `department` |
+|---|---|
+| `POST /api/members` | `400` + `{ "error": "Invalid department. Allowed values: Engineering, Product, ..." }` |
+| `PATCH /api/members/:id` | Same `400` response when `department` is provided but not a canonical code |
+
+### CSV export column order
+
+The `GET /api/members/export` column order is **frozen**:
+
+```
+id, name, email, role, department, start_date, is_active
+```
+
+BambooHR processes columns by **position**, not by header name. Do **not** add, remove, or reorder columns without coordinating with People Ops first — BambooHR rejects CSVs with unexpected column counts and the failure is silent (no error email; People Ops discovers it days later when reports are wrong).
+
+### Adding or changing departments
+
+New department codes must be added in BambooHR first by People Ops, then added to `VALID_DEPARTMENTS` in `server/src/departments.ts`. Do not add a new code only in TeamBoard — BambooHR will reject those entries.
 
 ## TypeScript Configuration
 
