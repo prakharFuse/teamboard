@@ -15,6 +15,15 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+// NOTE: This mapping must be kept in sync with server/src/departments.ts (source of truth).
+// Keys must match the BambooHR dept_codes exactly. To add or change a dept_code,
+// update server/src/departments.ts first, then mirror the change here.
+const DEPARTMENTS: Record<string, string> = {
+  ENG: 'Engineering', PROD: 'Product', DES: 'Design',
+  MKT: 'Marketing', SALES: 'Sales', OPS: 'Operations',
+  FIN: 'Finance', HR: 'HR', LGL: 'Legal',
+};
+
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -98,7 +107,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value="" disabled>Select department</option>
+                  {Object.entries(DEPARTMENTS).map(([code, deptName]) => (
+                    <option key={code} value={code}>{deptName}</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
@@ -122,7 +136,7 @@ function App() {
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
-                  <td><span className="dept-badge">{m.department}</span></td>
+                  <td><span className="dept-badge">{DEPARTMENTS[m.department] ?? m.department}</span></td>
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
@@ -143,7 +157,7 @@ function App() {
               <ul className="dept-list">
                 {stats.byDepartment.map(d => (
                   <li key={d.department}>
-                    <span>{d.department}</span>
+                    <span>{DEPARTMENTS[d.department] ?? d.department}</span>
                     <span className="count">{d.count}</span>
                   </li>
                 ))}

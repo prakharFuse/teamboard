@@ -30,14 +30,14 @@ export function getDb(): DatabaseSync {
       const insert = db.prepare(
         'INSERT INTO members (name, email, role, department, start_date) VALUES (?, ?, ?, ?, ?)'
       );
-      insert.run('Alice Chen', 'alice.chen@company.com', 'Senior Engineer', 'Engineering', '2022-03-15');
-      insert.run('Bob Martinez', 'bob.martinez@company.com', 'Product Manager', 'Product', '2021-07-01');
-      insert.run('Carol Smith', 'carol.smith@company.com', 'Designer', 'Design', '2023-01-10');
-      insert.run('David Kim', 'david.kim@company.com', 'Engineer', 'Eng', '2023-06-20');
-      insert.run('Eva Johansson', 'eva.johansson@company.com', 'Marketing Lead', 'Marketing', '2022-11-05');
-      insert.run('Frank Osei', 'frank.osei@company.com', 'Sales Rep', 'Sales', '2024-02-14');
-      insert.run('Grace Lin', 'grace.lin@company.com', 'HR Coordinator', 'Human Resources', '2021-04-01');
-      insert.run('Hiro Tanaka', 'hiro.tanaka@company.com', 'DevOps Engineer', 'Eng', '2023-09-12');
+      insert.run('Alice Chen', 'alice.chen@company.com', 'Senior Engineer', 'ENG', '2022-03-15');
+      insert.run('Bob Martinez', 'bob.martinez@company.com', 'Product Manager', 'PROD', '2021-07-01');
+      insert.run('Carol Smith', 'carol.smith@company.com', 'Designer', 'DES', '2023-01-10');
+      insert.run('David Kim', 'david.kim@company.com', 'Engineer', 'ENG', '2023-06-20');
+      insert.run('Eva Johansson', 'eva.johansson@company.com', 'Marketing Lead', 'MKT', '2022-11-05');
+      insert.run('Frank Osei', 'frank.osei@company.com', 'Sales Rep', 'SALES', '2024-02-14');
+      insert.run('Grace Lin', 'grace.lin@company.com', 'HR Coordinator', 'HR', '2021-04-01');
+      insert.run('Hiro Tanaka', 'hiro.tanaka@company.com', 'DevOps Engineer', 'ENG', '2023-09-12');
     }
   }
   return db;
