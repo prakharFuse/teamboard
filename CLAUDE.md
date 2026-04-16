@@ -77,6 +77,17 @@ teamboard/
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
+#### Department Validation
+
+- **Source of truth**: `server/src/departments.ts` exports the `DEPARTMENTS` const tuple and `isValidDepartment()` helper.
+- **Allowed values** (9 canonical BambooHR department codes):
+  `Engineering`, `Product`, `Design`, `Marketing`, `Sales`, `Operations`, `Finance`, `HR`, `Legal`
+- **Enforcement**: The `POST /api/members` and `PATCH /api/members/:id` handlers validate the `department` field against this list. An invalid value returns **HTTP 400** with a message listing all allowed values:
+  ```
+  Invalid department '<value>'. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal
+  ```
+- **Coordination required**: Any change to the allowed department list **must be coordinated with People Ops and BambooHR first**. BambooHR validates department values on import — unrecognised codes cause entire rows to be skipped silently.
+
 ### Client
 
 - **Single component**: All logic lives in `App.tsx` — `useState` for form fields, members list, stats, and UI visibility.
@@ -102,7 +113,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores canonical BambooHR department codes only. The API enforces the allowed list at write time (see [Department Validation](#department-validation) above); values outside the 9 canonical codes are rejected with HTTP 400.
 
 ## API Endpoints
 
