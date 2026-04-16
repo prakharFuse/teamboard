@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — VALID_DEPARTMENTS tuple + isValidDepartment() helper (department validation source of truth)
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -102,21 +103,49 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- `department` must be one of the 9 valid department codes — see [Department Codes](#department-codes) below.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`. `department` must be a valid department code (see [Department Codes](#department-codes)). |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`. If `department` is provided it must be a valid department code (see [Department Codes](#department-codes)). |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+## Department Codes
+
+**Source of truth:** `server/src/departments.ts` — the `VALID_DEPARTMENTS` tuple and `isValidDepartment()` helper live here. The POST and PATCH handlers import from this file to enforce validation.
+
+The 9 valid department codes (must match exactly, case-sensitive):
+
+| Code |
+|------|
+| `Engineering` |
+| `Product` |
+| `Design` |
+| `Marketing` |
+| `Sales` |
+| `Operations` |
+| `Finance` |
+| `HR` |
+| `Legal` |
+
+**Common mistakes to avoid** (from Knowledge Bank):
+
+- Use `"Engineering"`, **not** `"Eng"` or `"Engg"` or `"IT"`.
+- Use `"HR"`, **not** `"Human Resources"`.
+- `"Product & Design"` is not valid — these are separate departments.
+
+Invalid codes return HTTP 400 with an error message listing the allowed values.
+
+**Adding new department codes:** New codes must be added in BambooHR first by People Ops, then added to `VALID_DEPARTMENTS` in `server/src/departments.ts`. Do **not** add a code only in TeamBoard — BambooHR will reject rows with unrecognised values.
 
 ## TypeScript Configuration
 
