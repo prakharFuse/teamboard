@@ -13,6 +13,14 @@ interface MemberRow {
   updated_at: string;
 }
 
+function escapeCsvField(value: string | number): string {
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\r') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
@@ -50,8 +58,10 @@ router.get('/export', (req: Request, res: Response): void => {
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
   const header = 'id,name,email,role,department,start_date,is_active';
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
-  )].join('\n');
+    [r.id, r.name, r.email, r.role, r.department, r.start_date, r.is_active]
+      .map(escapeCsvField)
+      .join(',')
+  )].join('\r\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
   res.send(csv);
