@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical BambooHR department codes (source of truth)
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -92,7 +93,7 @@ CREATE TABLE members (
   name        TEXT    NOT NULL,
   email       TEXT    NOT NULL UNIQUE,
   role        TEXT    NOT NULL,
-  department  TEXT    NOT NULL,
+  department  TEXT    NOT NULL,             -- Must be one of the 9 canonical values in server/src/departments.ts
   start_date  TEXT    NOT NULL,             -- ISO date string: YYYY-MM-DD
   is_active   INTEGER NOT NULL DEFAULT 1,   -- 1 = active, 0 = inactive
   created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -102,19 +103,19 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`. `department` must be a valid code from `departments.ts`; invalid codes return HTTP 400 with the allowed list. |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`. `department` must be a valid code from `departments.ts`; invalid codes return HTTP 400 with the allowed list. |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/departments` | List all valid department names |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
 
