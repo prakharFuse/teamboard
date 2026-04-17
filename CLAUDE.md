@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — VALID_DEPARTMENTS list + isValidDepartment helper
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -140,7 +141,7 @@ The following 9 values are the only valid `department` codes accepted by the API
 { "error": "Invalid department. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal" }
 ```
 
-**Keeping the list in sync:** This list must stay in sync with BambooHR's canonical department list. If BambooHR adds or removes a department, update `VALID_DEPARTMENTS` in `server/src/departments.ts` and this section — coordinate with People Ops before making any changes.
+**Keeping the list in sync:** This list must stay in sync with BambooHR's canonical department list. If BambooHR adds or removes a department, update `VALID_DEPARTMENTS` in **both** `server/src/departments.ts` (server-side validation and API) **and** `client/src/App.tsx` (the `<select>` dropdown in the Add Member form), and update this section — coordinate with People Ops before making any changes.
 
 ## TypeScript Configuration
 
