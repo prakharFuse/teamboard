@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react';
 
+const VALID_DEPARTMENTS = [
+  'Engineering',
+  'Product',
+  'Design',
+  'Marketing',
+  'Sales',
+  'Operations',
+  'Finance',
+  'HR',
+  'Legal',
+] as const;
+
 interface Member {
   id: number;
   name: string;
@@ -98,7 +110,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value=''>Select department</option>
+                  {VALID_DEPARTMENTS.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
