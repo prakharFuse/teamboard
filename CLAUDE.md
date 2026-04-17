@@ -102,21 +102,45 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- All seed data uses canonical department names (e.g., `"Engineering"`, `"HR"`) — see [Department Codes](#department-codes).
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`. `department` must be a valid canonical code (see [Department Codes](#department-codes)); invalid values return HTTP 400 |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`. If `department` is provided, it must be a valid canonical code (see [Department Codes](#department-codes)); invalid values return HTTP 400 |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+## Department Codes
+
+**Source of truth:** `server/src/departments.ts`
+
+The following 9 values are the only valid `department` codes accepted by the API and stored in the database. They match BambooHR's canonical department list exactly:
+
+- Engineering
+- Product
+- Design
+- Marketing
+- Sales
+- Operations
+- Finance
+- HR
+- Legal
+
+**Validation behaviour:** The POST and PATCH endpoints validate the `department` field against this list. An invalid value returns HTTP 400 with a message listing all allowed codes:
+
+```json
+{ "error": "Invalid department. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal" }
+```
+
+**Keeping the list in sync:** This list must stay in sync with BambooHR's canonical department list. If BambooHR adds or removes a department, update `VALID_DEPARTMENTS` in `server/src/departments.ts` and this section — coordinate with People Ops before making any changes.
 
 ## TypeScript Configuration
 
