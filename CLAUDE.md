@@ -114,6 +114,7 @@ CREATE TABLE members (
 | PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
+| GET | `/api/departments` | List all valid department codes and display names |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
