@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical department list + isValidDepartment helper
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -56,6 +57,7 @@ teamboard/
 │   └── src/
 │       ├── main.tsx          — React entry (createRoot + StrictMode)
 │       ├── App.tsx           — Single-component UI (all state + fetch logic here)
+│       ├── departments.ts    — Canonical department list (kept in sync with server)
 │       └── styles.css        — Plain CSS (no CSS framework)
 ├── data/
 │   ├── .gitkeep
@@ -84,6 +86,19 @@ teamboard/
 - **API calls**: Use relative paths (e.g., `/api/members`) — Vite proxies to the server during dev.
 - **Styling**: Plain CSS in `styles.css` — no Tailwind, no CSS-in-JS, no component library.
 
+### Department Validation
+
+- **Valid departments (9):** `Engineering`, `Product`, `Design`, `Marketing`, `Sales`, `Operations`, `Finance`, `HR`, `Legal` — the BambooHR canonical list from the knowledge base.
+- **Source of truth modules:**
+  - `server/src/departments.ts` — exports `VALID_DEPARTMENTS` (readonly string array) and `isValidDepartment(dept: string): boolean`; imported by the route handlers.
+  - `client/src/departments.ts` — duplicate of the same array for the React client bundle; used to populate the department `<select>` dropdown in `App.tsx`.
+  - The two modules are **intentionally duplicated** (no shared-code infrastructure exists in this monorepo) and must be kept in sync whenever the canonical list changes.
+- **API enforcement:** `POST /api/members` and `PATCH /api/members/:id` validate the `department` field against `VALID_DEPARTMENTS`. An invalid value returns HTTP **400** with:
+  ```json
+  { "error": "Invalid department '<value>'. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal" }
+  ```
+- **UI enforcement:** The add-member form uses a `<select>` dropdown (not a free-text input) populated from `VALID_DEPARTMENTS`, preventing invalid values from being submitted in the first place.
+
 ## Database Schema
 
 ```sql
@@ -102,7 +117,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- On every server start, normalization `UPDATE` statements run to fix any pre-existing bad department values (e.g., `'Eng'` → `'Engineering'`, `'Human Resources'` → `'HR'`).
 
 ## API Endpoints
 
