@@ -15,6 +15,7 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+// Keep in sync with server/src/departments.ts — see CLAUDE.md for update process
 const VALID_DEPARTMENTS = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'Operations', 'Finance', 'HR', 'Legal'] as const;
 
 function App() {

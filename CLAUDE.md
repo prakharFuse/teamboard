@@ -84,7 +84,7 @@ teamboard/
 - These values are the source of truth synced with BambooHR. Non-matching values cause BambooHR to skip the entire row on import.
 - **POST** `/api/members` and **PATCH** `/api/members/:id` validate the `department` value against this list. An invalid value returns **HTTP 400** with an error message that lists all allowed values (e.g., `"Invalid department 'Eng'. Allowed values: Engineering, Product, ..."`).
 - The `departments.ts` module exports `VALID_DEPARTMENTS` (readonly const array), the `Department` union type, `isValidDepartment(dept)` (type guard), and `validDepartmentsList()` (comma-separated string for error messages).
-- If a new department is needed, it must be added in BambooHR first by People Ops, then added to `VALID_DEPARTMENTS` in `departments.ts`.
+- If a new department is needed, it must be added in BambooHR first by People Ops, then added to `VALID_DEPARTMENTS` in `server/src/departments.ts` **and** the matching constant in `client/src/App.tsx`.
 
 ### Client
 
@@ -111,7 +111,6 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
 
 ## API Endpoints
 
