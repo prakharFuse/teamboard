@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
-import { LEGACY_NAME_TO_CODE } from '../departments.js';
+import { LEGACY_NAME_TO_CODE } from './departments.js';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'team.db');
 
