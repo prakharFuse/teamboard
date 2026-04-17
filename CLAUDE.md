@@ -102,21 +102,41 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores validated BambooHR department codes (see `server/src/departments.ts`). All seed data uses canonical codes.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`. `department` must be a valid BambooHR code (see `server/src/departments.ts`) |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`. If `department` is provided, it must be a valid BambooHR code (see `server/src/departments.ts`) |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+## Department Validation
+
+Department values are validated on POST and PATCH against a canonical list sourced from BambooHR.
+
+**Source file:** `server/src/departments.ts` — single source of truth for valid department codes.
+
+**Canonical department codes:**
+
+```
+Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal
+```
+
+**Error format on invalid department (HTTP 400):**
+
+```json
+{ "error": "Invalid department. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal" }
+```
+
+**Process note:** The department code list is synced with BambooHR's canonical list. Any changes to `server/src/departments.ts` require People Ops confirmation first — new departments must be created in BambooHR before being added here. If the code list diverges from BambooHR's canonical list, BambooHR will silently skip affected rows during the weekly Monday import.
 
 ## TypeScript Configuration
 
