@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { VALID_DEPT_CODES, DEPT_CODE_TO_NAME } from '../departments.js';
 
 interface MemberRow {
   id: number;
@@ -13,6 +14,17 @@ interface MemberRow {
   updated_at: string;
 }
 
+interface MemberResponse extends MemberRow {
+  dept_name: string;
+}
+
+function withDeptName(member: MemberRow): MemberResponse {
+  return {
+    ...member,
+    dept_name: DEPT_CODE_TO_NAME[member.department] ?? member.department,
+  };
+}
+
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
@@ -20,7 +32,7 @@ router.get('/', (req: Request, res: Response): void => {
   const rows = db.prepare(
     'SELECT * FROM members WHERE is_active = 1 ORDER BY name ASC'
   ).all() as unknown as MemberRow[];
-  res.json({ members: rows });
+  res.json({ members: rows.map(withDeptName) });
 });
 
 router.post('/', (req: Request, res: Response): void => {
@@ -29,13 +41,19 @@ router.post('/', (req: Request, res: Response): void => {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
     return;
   }
+  if (!VALID_DEPT_CODES.includes(department)) {
+    res.status(400).json({
+      error: `Invalid department code. Allowed codes: ${VALID_DEPT_CODES.join(', ')}`,
+    });
+    return;
+  }
   const db = getDb();
   try {
     db.prepare(
       'INSERT INTO members (name, email, role, department, start_date) VALUES (?, ?, ?, ?, ?)'
     ).run(name, email, role, department, start_date);
     const member = db.prepare('SELECT * FROM members WHERE email = ?').get(email) as unknown as MemberRow;
-    res.status(201).json(member);
+    res.status(201).json(withDeptName(member));
   } catch (err: unknown) {
     if (err instanceof Error && err.message.includes('UNIQUE')) {
       res.status(409).json({ error: 'A member with this email already exists' });
@@ -65,7 +83,13 @@ router.get('/stats', (req: Request, res: Response): void => {
   const byDept = db.prepare(
     'SELECT department, COUNT(*) as count FROM members WHERE is_active = 1 GROUP BY department ORDER BY count DESC'
   ).all() as unknown as { department: string; count: number }[];
-  res.json({ total: total.count, byDepartment: byDept });
+  res.json({
+    total: total.count,
+    byDepartment: byDept.map(d => ({
+      ...d,
+      dept_name: DEPT_CODE_TO_NAME[d.department] ?? d.department,
+    })),
+  });
 });
 
 router.get('/:id', (req: Request, res: Response): void => {
@@ -77,7 +101,7 @@ router.get('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  res.json(member);
+  res.json(withDeptName(member));
 });
 
 router.patch('/:id', (req: Request, res: Response): void => {
@@ -90,6 +114,12 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
+  if (department !== undefined && !VALID_DEPT_CODES.includes(department)) {
+    res.status(400).json({
+      error: `Invalid department code. Allowed codes: ${VALID_DEPT_CODES.join(', ')}`,
+    });
+    return;
+  }
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
@@ -100,7 +130,7 @@ router.patch('/:id', (req: Request, res: Response): void => {
     WHERE id = ?`
   ).run(name ?? null, email ?? null, role ?? null, department ?? null, member.id);
   const updated = db.prepare('SELECT * FROM members WHERE id = ?').get(member.id) as unknown as MemberRow;
-  res.json(updated);
+  res.json(withDeptName(updated));
 });
 
 router.delete('/:id', (req: Request, res: Response): void => {
