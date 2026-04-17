@@ -116,11 +116,22 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.json({ success: true });
     return;
   }
-  const deactivatedEmail = `deactivated-${member.email}`;
-  db.prepare(
-    `UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(deactivatedEmail, member.id);
-  res.json({ success: true });
+  // Include the member's unique ID in the prefix to guarantee no UNIQUE constraint
+  // collision when the same email address has been deactivated before (e.g. a previous
+  // member with the same email was already soft-deleted).
+  const deactivatedEmail = `deactivated-${member.id}-${member.email}`;
+  try {
+    db.prepare(
+      `UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?`
+    ).run(deactivatedEmail, member.id);
+    res.json({ success: true });
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('UNIQUE')) {
+      res.status(409).json({ error: 'Cannot deactivate member: email conflict' });
+      return;
+    }
+    throw err;
+  }
 });
 
 export default router;
