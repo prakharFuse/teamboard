@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — canonical BambooHR department list + validation helpers
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -76,6 +77,14 @@ teamboard/
 - **PATCH pattern**: Uses `COALESCE(?, existing_column)` to allow partial updates — only provided fields are changed.
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
+
+### Department Validation
+
+- The `department` field must be one of the 9 canonical values defined in `server/src/departments.ts`: `Engineering`, `Product`, `Design`, `Marketing`, `Sales`, `Operations`, `Finance`, `HR`, `Legal`.
+- These values are the source of truth synced with BambooHR. Non-matching values cause BambooHR to skip the entire row on import.
+- **POST** `/api/members` and **PATCH** `/api/members/:id` validate the `department` value against this list. An invalid value returns **HTTP 400** with an error message that lists all allowed values (e.g., `"Invalid department 'Eng'. Allowed values: Engineering, Product, ..."`).
+- The `departments.ts` module exports `VALID_DEPARTMENTS` (readonly const array), the `Department` union type, `isValidDepartment(dept)` (type guard), and `validDepartmentsList()` (comma-separated string for error messages).
+- If a new department is needed, it must be added in BambooHR first by People Ops, then added to `VALID_DEPARTMENTS` in `departments.ts`.
 
 ### Client
 
@@ -109,9 +118,9 @@ CREATE TABLE members (
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`; `department` validated against canonical list (HTTP 400 if invalid) |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`; `department` validated against canonical list if provided (HTTP 400 if invalid) |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
