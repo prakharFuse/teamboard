@@ -112,7 +112,12 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
+  const deactivatedEmail = member.email.startsWith('deactivated-')
+    ? member.email
+    : `deactivated-${member.email}`;
+  db.prepare(
+    "UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?"
+  ).run(deactivatedEmail, member.id);
   res.json({ success: true });
 });
 
