@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical BambooHR department codes (source of truth)
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -77,6 +78,22 @@ teamboard/
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
+### Department Validation
+
+Canonical BambooHR department codes are defined in **`server/src/departments.ts`** as the single source of truth. The 9 allowed values are:
+
+```
+Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal
+```
+
+Both **POST `/api/members`** and **PATCH `/api/members/:id`** enforce this list. Supplying any other value returns a `400` response with an error message that lists all allowed codes:
+
+```json
+{ "error": "Invalid department. Allowed values: Engineering, Product, Design, Marketing, Sales, Operations, Finance, HR, Legal" }
+```
+
+The module exports `ALLOWED_DEPARTMENTS` (readonly const array), the `Department` union type, and the `isValidDepartment(dept: string): dept is Department` type-guard used by the route handlers.
+
 ### Client
 
 - **Single component**: All logic lives in `App.tsx` — `useState` for form fields, members list, stats, and UI visibility.
@@ -102,16 +119,16 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- Seed data uses the canonical department codes from `server/src/departments.ts`.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`; `department` must be a valid BambooHR code (see Department Validation) |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`; if `department` is provided it must be a valid BambooHR code (see Department Validation) |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
