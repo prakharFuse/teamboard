@@ -102,7 +102,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores canonical BambooHR department codes (see [Department Codes](#department-codes) below).
 
 ## API Endpoints
 
@@ -117,6 +117,8 @@ CREATE TABLE members (
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+
+> **Department validation:** `POST /api/members` and `PATCH /api/members/:id` validate the `department` field against the canonical list in `server/src/departments.ts`. An invalid value returns **HTTP 400** with a JSON error body listing all allowed values: `{ "error": "Invalid department. Allowed values: Engineering, Product, ..." }`. See [Department Codes](#department-codes) below.
 
 ## TypeScript Configuration
 
@@ -163,3 +165,32 @@ CREATE TABLE members (
 - There is **no CI/CD pipeline** configured.
 - The `data/team.db` file is gitignored (only `data/.gitkeep` is tracked).
 - `dist/` is gitignored — always run `pnpm build` after cloning or after server changes before running `pnpm dev`.
+
+## Department Codes
+
+**Single source of truth:** `server/src/departments.ts`
+
+This module exports the canonical list of BambooHR-valid department codes, an `isValidDepartment(dept: string): boolean` helper, and a pre-formatted `DEPARTMENTS_ERROR_MSG` constant used by the API error responses. All validation logic must import from this file — never hard-code department names elsewhere.
+
+### Allowed values (9 total)
+
+```
+Engineering
+Product
+Design
+Marketing
+Sales
+Operations
+Finance
+HR
+Legal
+```
+
+### Changing the department list
+
+- **People Ops approval is required** before adding, removing, or renaming any department. New departments must be created in BambooHR first; TeamBoard must not define departments that BambooHR doesn't recognize.
+- **Test in the BambooHR sandbox** before merging. People Ops holds the sandbox credentials — ask in `#people-ops`.
+
+### CSV export — column position
+
+The CSV export (`GET /api/members/export`) emits the `department` column at **position 5 (1-indexed)**. BambooHR processes columns by position, not by header name. Do **not** add, remove, or reorder CSV columns without coordinating with People Ops first — a mismatched column count causes the entire import to fail silently (KB Doc 2).
