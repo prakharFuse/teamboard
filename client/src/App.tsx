@@ -15,6 +15,11 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+interface Workspace {
+  slug: string;
+  name: string;
+}
+
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -25,28 +30,57 @@ function App() {
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [currentWorkspace, setCurrentWorkspace] = useState('');
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [workspaceSwitcherEnabled, setWorkspaceSwitcherEnabled] = useState(false);
+  const [departmentFilter, setDepartmentFilter] = useState('');
 
-  async function loadMembers(): Promise<void> {
-    const res = await fetch('/api/members');
+  function apiFetch(path: string, options?: RequestInit): Promise<Response> {
+    const { headers: existingHeaders, ...rest } = options ?? {};
+    return fetch(path, {
+      ...rest,
+      headers: {
+        ...(existingHeaders as Record<string, string> | undefined),
+        'X-Workspace-Id': currentWorkspace,
+      },
+    });
+  }
+
+  async function loadMembers(dept?: string): Promise<void> {
+    const qs = dept ? `?department=${encodeURIComponent(dept)}` : '';
+    const res = await apiFetch(`/api/members${qs}`);
     const data = await res.json();
     setMembers(data.members);
   }
 
   async function loadStats(): Promise<void> {
-    const res = await fetch('/api/members/stats');
+    const res = await apiFetch('/api/members/stats');
     const data = await res.json();
     setStats(data);
   }
 
   useEffect(() => {
+    apiFetch('/api/user')
+      .then(res => res.json())
+      .then(data => {
+        setWorkspaces(data.accessible_workspaces ?? []);
+        setCurrentWorkspace(data.accessible_workspaces?.[0]?.slug ?? 'parent-co');
+        setWorkspaceSwitcherEnabled(data.workspace_switcher_enabled ?? false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (currentWorkspace === '') return;
     loadMembers();
     loadStats();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentWorkspace]);
 
   async function addMember(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setError('');
-    const res = await fetch('/api/members', {
+    const res = await apiFetch('/api/members', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, role, department, start_date: startDate }),
@@ -68,7 +102,7 @@ function App() {
 
   async function removeMember(id: number): Promise<void> {
     if (!confirm('Remove this team member?')) return;
-    await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    await apiFetch(`/api/members/${id}`, { method: 'DELETE' });
     loadMembers();
     loadStats();
   }
@@ -78,12 +112,35 @@ function App() {
       <header>
         <h1>TeamBoard</h1>
         <p className="subtitle">Internal Team Directory</p>
+        {workspaceSwitcherEnabled && (
+          <select
+            value={currentWorkspace}
+            onChange={e => setCurrentWorkspace(e.target.value)}
+          >
+            {workspaces.map(ws => (
+              <option key={ws.slug} value={ws.slug}>{ws.name}</option>
+            ))}
+          </select>
+        )}
       </header>
 
       <div className="layout">
         <main>
           <div className="toolbar">
             <h2>Team Members ({members.length})</h2>
+            <select
+              value={departmentFilter}
+              onChange={e => {
+                const dept = e.target.value;
+                setDepartmentFilter(dept);
+                loadMembers(dept || undefined);
+              }}
+            >
+              <option value="">All</option>
+              {stats?.byDepartment.map(d => (
+                <option key={d.department} value={d.department}>{d.department}</option>
+              ))}
+            </select>
             <button onClick={() => setShowForm(!showForm)}>
               {showForm ? 'Cancel' : '+ Add Member'}
             </button>
@@ -150,7 +207,7 @@ function App() {
               </ul>
             </>
           )}
-          <a href="/api/members/export" className="export-link">Download CSV for HR</a>
+          <a href={`/api/members/export?workspace=${currentWorkspace}`} className="export-link">Download CSV for HR</a>
         </aside>
       </div>
     </div>
