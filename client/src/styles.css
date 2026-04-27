@@ -184,3 +184,27 @@ aside h3 {
 }
 
 .export-link:hover { text-decoration: underline; }
+
+.workspace-switcher {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  margin-left: 16px;
+  cursor: pointer;
+}
+
+.workspace-switcher:focus {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+.form-row select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
