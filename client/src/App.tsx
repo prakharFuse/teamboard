@@ -67,7 +67,7 @@ function App() {
   }
 
   async function removeMember(id: number): Promise<void> {
-    if (!confirm('Remove this team member?')) return;
+    if (!confirm('Mark this member as inactive? They will be removed from the directory but their record will be retained for HR purposes.')) return;
     await fetch(`/api/members/${id}`, { method: 'DELETE' });
     loadMembers();
     loadStats();
