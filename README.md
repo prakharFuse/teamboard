@@ -26,7 +26,7 @@ Server runs on port 4060, client on port 5173 with API proxy to the server.
 | POST | /api/members | Add a team member |
 | GET | /api/members/:id | Get member by ID |
 | PATCH | /api/members/:id | Update member fields |
-| DELETE | /api/members/:id | Remove a team member |
+| DELETE | /api/members/:id | Deactivate a team member (soft-delete) |
 | GET | /api/members/export | Download CSV (HR integration) |
 | GET | /api/members/stats | Department statistics |
 
