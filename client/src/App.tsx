@@ -25,6 +25,7 @@ function App() {
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [departmentOptions, setDepartmentOptions] = useState<{code:string;name:string}[]>([]);
 
   async function loadMembers(): Promise<void> {
     const res = await fetch('/api/members');
@@ -41,6 +42,9 @@ function App() {
   useEffect(() => {
     loadMembers();
     loadStats();
+    fetch('/api/departments')
+      .then(res => res.json())
+      .then(data => setDepartmentOptions(data.departments));
   }, []);
 
   async function addMember(e: React.FormEvent): Promise<void> {
@@ -98,7 +102,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value="">Select department</option>
+                  {departmentOptions.map(d => (
+                    <option key={d.code} value={d.code}>{d.name}</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
@@ -122,7 +131,7 @@ function App() {
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
-                  <td><span className="dept-badge">{m.department}</span></td>
+                  <td><span className="dept-badge">{departmentOptions.find(d => d.code === m.department)?.name ?? m.department}</span></td>
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
