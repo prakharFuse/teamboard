@@ -112,7 +112,15 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare("UPDATE members SET is_active = 0, email = 'deactivated-' || email, updated_at = datetime('now') WHERE id = ?").run(member.id);
+  try {
+    db.prepare("UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?").run('deactivated-' + member.email, member.id);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('UNIQUE')) {
+      res.status(409).json({ error: 'Deactivated email already exists' });
+      return;
+    }
+    throw err;
+  }
   res.json({ success: true });
 });
 
