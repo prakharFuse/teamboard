@@ -44,7 +44,8 @@ function App() {
     loadStats();
     fetch('/api/departments')
       .then(res => res.json())
-      .then(data => setDepartmentOptions(data.departments));
+      .then((data: { departments: Array<{ code: string; name: string }> }) => setDepartmentOptions(data.departments))
+      .catch((err: unknown) => console.error('Failed to load departments:', err));
   }, []);
 
   async function addMember(e: React.FormEvent): Promise<void> {
