@@ -92,7 +92,7 @@ CREATE TABLE members (
   name        TEXT    NOT NULL,
   email       TEXT    NOT NULL UNIQUE,
   role        TEXT    NOT NULL,
-  department  TEXT    NOT NULL,
+  department  TEXT    NOT NULL,             -- stores validated dept_code values only (see server/src/departments.ts for canonical list)
   start_date  TEXT    NOT NULL,             -- ISO date string: YYYY-MM-DD
   is_active   INTEGER NOT NULL DEFAULT 1,   -- 1 = active, 0 = inactive
   created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -115,6 +115,7 @@ CREATE TABLE members (
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/departments` | Returns list of valid BambooHR department codes and display names |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
 
