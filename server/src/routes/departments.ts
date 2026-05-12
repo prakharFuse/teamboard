@@ -3,7 +3,7 @@ import { DEPARTMENTS } from '../departments.js';
 
 const router: Router = Router();
 
-router.get('/', (req: Request, res: Response): void => {
+router.get('/', (_req: Request, res: Response): void => {
   res.json({ departments: DEPARTMENTS });
 });
 
