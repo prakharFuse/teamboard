@@ -18,6 +18,7 @@ interface Stats {
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [departments, setDepartments] = useState<{dept_code: string; dept_name: string}[]>([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
@@ -38,9 +39,16 @@ function App() {
     setStats(data);
   }
 
+  async function loadDepartments(): Promise<void> {
+    const res = await fetch('/api/departments');
+    const data = await res.json();
+    setDepartments(data.departments);
+  }
+
   useEffect(() => {
     loadMembers();
     loadStats();
+    loadDepartments();
   }, []);
 
   async function addMember(e: React.FormEvent): Promise<void> {
@@ -98,7 +106,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value="" disabled>Select department</option>
+                  {departments.map(d => (
+                    <option key={d.dept_code} value={d.dept_code}>{d.dept_name}</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
