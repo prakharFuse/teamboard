@@ -117,9 +117,17 @@ router.delete('/:id', (req: Request, res: Response): void => {
     return;
   }
   const deactivatedEmail = `deactivated-${member.email}`;
-  db.prepare(
-    `UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?`
-  ).run(deactivatedEmail, member.id);
+  try {
+    db.prepare(
+      `UPDATE members SET is_active = 0, email = ?, updated_at = datetime('now') WHERE id = ?`
+    ).run(deactivatedEmail, member.id);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('UNIQUE')) {
+      res.status(409).json({ error: 'Deactivated email address already exists' });
+      return;
+    }
+    throw err;
+  }
   res.json({ success: true });
 });
 
