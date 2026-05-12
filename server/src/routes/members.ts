@@ -112,8 +112,19 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
-  res.json({ success: true });
+  if (member.is_active === 0) {
+    res.status(400).json({ error: 'Member is already inactive' });
+    return;
+  }
+  db.prepare(
+    `UPDATE members SET
+      is_active = 0,
+      email = 'deactivated-' || email,
+      updated_at = datetime('now')
+    WHERE id = ?`
+  ).run(member.id);
+  const updated = db.prepare('SELECT * FROM members WHERE id = ?').get(member.id) as unknown as MemberRow;
+  res.json(updated);
 });
 
 export default router;
