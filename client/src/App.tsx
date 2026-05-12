@@ -15,10 +15,15 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+interface Department {
+  dept_code: string;
+  dept_name: string;
+}
+
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
-  const [departments, setDepartments] = useState<{dept_code: string; dept_name: string}[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');

@@ -31,7 +31,7 @@ router.post('/', (req: Request, res: Response): void => {
     return;
   }
   if (!isValidDeptCode(department)) {
-    res.status(400).json({ error: `Invalid department code "${department}". Allowed codes: ${[...VALID_DEPT_CODES].join(', ')}`, allowedCodes: [...VALID_DEPT_CODES] });
+    res.status(400).json({ error: `Invalid department code "${department}". Allowed codes: ${[...VALID_DEPT_CODES].join(', ')}` });
     return;
   }
   const db = getDb();
@@ -96,7 +96,7 @@ router.patch('/:id', (req: Request, res: Response): void => {
   }
   const { name, email, role, department } = req.body;
   if (department !== undefined && !isValidDeptCode(department)) {
-    res.status(400).json({ error: `Invalid department code "${department}". Allowed codes: ${[...VALID_DEPT_CODES].join(', ')}`, allowedCodes: [...VALID_DEPT_CODES] });
+    res.status(400).json({ error: `Invalid department code "${department}". Allowed codes: ${[...VALID_DEPT_CODES].join(', ')}` });
     return;
   }
   db.prepare(
