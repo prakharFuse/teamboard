@@ -47,7 +47,9 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical dept_code/dept_name mapping + validation
 │       └── routes/
+│           ├── departments.ts — GET /api/departments endpoint
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
 │   ├── index.html            — Vite HTML entry point
@@ -76,6 +78,7 @@ teamboard/
 - **PATCH pattern**: Uses `COALESCE(?, existing_column)` to allow partial updates — only provided fields are changed.
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
+- **dept_code validation**: The `department` column stores only `dept_code` values validated against the canonical list in `server/src/departments.ts`. POST and PATCH requests with an unrecognised dept_code are rejected with HTTP 400 and the list of allowed codes. The UI populates department choices from `GET /api/departments` to prevent invalid input at the source.
 
 ### Client
 
@@ -102,7 +105,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- Seed data uses canonical dept_codes throughout — inconsistent names (`"Eng"`, `"Human Resources"`) have been corrected to `"Engineering"` and `"HR"` respectively.
 
 ## API Endpoints
 
@@ -115,6 +118,7 @@ CREATE TABLE members (
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/departments` | List valid department codes and display names |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
 
