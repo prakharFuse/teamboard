@@ -74,7 +74,7 @@ teamboard/
 - **SQL**: Always use parameterized queries with `?` placeholders. Never use string concatenation for SQL.
 - **Type assertions**: SQLite query results are typed via `as unknown as T` (e.g., `as unknown as MemberRow[]`) because `node:sqlite` returns untyped results.
 - **PATCH pattern**: Uses `COALESCE(?, existing_column)` to allow partial updates — only provided fields are changed.
-- **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
+- **DELETE**: Soft deletes (sets `is_active = 0` and prefixes the email with `deactivated-` for Okta SSO revocation). The row is never removed from the database.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
 ### Client
@@ -112,7 +112,7 @@ CREATE TABLE members (
 | POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
 | PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
-| DELETE | `/api/members/:id` | Hard delete member |
+| DELETE | `/api/members/:id` | Soft delete (deactivate) member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
 
