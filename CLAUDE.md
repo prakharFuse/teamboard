@@ -47,7 +47,9 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — Canonical BambooHR department codes (source of truth)
 │       └── routes/
+│           ├── departments.ts — GET /api/departments endpoint
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
 │   ├── index.html            — Vite HTML entry point
@@ -102,7 +104,7 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- The `department` column stores canonical `dept_code` values validated against `server/src/departments.ts`.
 
 ## API Endpoints
 
@@ -115,6 +117,7 @@ CREATE TABLE members (
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/departments` | List valid BambooHR department codes |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
 
