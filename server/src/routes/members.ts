@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { isValidDeptCode, getAllowedDeptCodes } from '../departments.js';
 
 interface MemberRow {
   id: number;
@@ -29,6 +30,10 @@ router.post('/', (req: Request, res: Response): void => {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
     return;
   }
+  if (!isValidDeptCode(department)) {
+    res.status(400).json({ error: `Invalid department code "${department}". Allowed codes: ${getAllowedDeptCodes().join(', ')}` });
+    return;
+  }
   const db = getDb();
   try {
     db.prepare(
@@ -48,7 +53,7 @@ router.post('/', (req: Request, res: Response): void => {
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
-  const header = 'id,name,email,role,department,start_date,is_active';
+  const header = 'id,name,email,role,dept_code,start_date,is_active';
   const csv = [header, ...rows.map(r =>
     `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
   )].join('\n');
@@ -90,6 +95,12 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
+  if (department !== undefined && department !== null) {
+    if (!isValidDeptCode(department)) {
+      res.status(400).json({ error: `Invalid department code "${department}". Allowed codes: ${getAllowedDeptCodes().join(', ')}` });
+      return;
+    }
+  }
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
