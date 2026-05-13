@@ -26,6 +26,21 @@ header h1 {
   margin-top: 4px;
 }
 
+.workspace-switcher {
+  font-size: 14px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+.workspace-switcher:focus {
+  outline: 2px solid #4f46e5;
+  outline-offset: 1px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 1fr 240px;
