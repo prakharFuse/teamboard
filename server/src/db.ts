@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { runMigrations } from './migrate.js';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'team.db');
 
@@ -10,6 +11,8 @@ export function getDb(): DatabaseSync {
   if (!db) {
     fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     db = new DatabaseSync(DB_PATH);
+
+    runMigrations(db);
 
     db.exec(`
       CREATE TABLE IF NOT EXISTS members (
