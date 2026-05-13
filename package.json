@@ -12,7 +12,8 @@
     "dev:client": "vite --config client/vite.config.ts",
     "build": "tsc -p server/tsconfig.build.json",
     "typecheck": "tsc -p server/tsconfig.json --noEmit && tsc -p client/tsconfig.json --noEmit",
-    "start": "node dist/server/index.js"
+    "start": "node dist/server/index.js",
+    "test": "pnpm build && node --test dist/server/tests/migrations.test.js"
   },
   "dependencies": {
     "@okta/jwt-verifier": "^3.0.1",
