@@ -15,6 +15,17 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+interface Workspace {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+interface AuthState {
+  user: { id: number; email: string; name: string } | null;
+  workspaces: Workspace[];
+}
+
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -25,22 +36,36 @@ function App() {
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [currentWorkspace, setCurrentWorkspace] = useState<string>('parent');
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [featureFlags, setFeatureFlags] = useState<Record<string, string>>({});
 
-  async function loadMembers(): Promise<void> {
-    const res = await fetch('/api/members');
+  async function loadMembers(ws: string = currentWorkspace): Promise<void> {
+    const res = await fetch('/api/members', {
+      headers: { 'X-Workspace-Id': ws },
+    });
     const data = await res.json();
     setMembers(data.members);
   }
 
-  async function loadStats(): Promise<void> {
-    const res = await fetch('/api/members/stats');
+  async function loadStats(ws: string = currentWorkspace): Promise<void> {
+    const res = await fetch('/api/members/stats', {
+      headers: { 'X-Workspace-Id': ws },
+    });
     const data = await res.json();
     setStats(data);
+  }
+
+  async function loadFeatureFlags(): Promise<void> {
+    const res = await fetch('/api/feature-flags');
+    const data = await res.json();
+    setFeatureFlags(data.flags ?? {});
   }
 
   useEffect(() => {
     loadMembers();
     loadStats();
+    loadFeatureFlags();
   }, []);
 
   async function addMember(e: React.FormEvent): Promise<void> {
@@ -48,7 +73,10 @@ function App() {
     setError('');
     const res = await fetch('/api/members', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Workspace-Id': currentWorkspace,
+      },
       body: JSON.stringify({ name, email, role, department, start_date: startDate }),
     });
     if (!res.ok) {
@@ -68,16 +96,41 @@ function App() {
 
   async function removeMember(id: number): Promise<void> {
     if (!confirm('Remove this team member?')) return;
-    await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    await fetch(`/api/members/${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Workspace-Id': currentWorkspace },
+    });
     loadMembers();
     loadStats();
   }
+
+  const workspaceOptions: Workspace[] = workspaces.length > 0
+    ? workspaces
+    : [{ id: 1, slug: 'parent', name: 'Parent Co' }];
 
   return (
     <div className="app">
       <header>
         <h1>TeamBoard</h1>
         <p className="subtitle">Internal Team Directory</p>
+        {featureFlags.workspace_switcher_enabled === 'true' && (
+          <select
+            className="workspace-switcher"
+            value={currentWorkspace}
+            onChange={(e) => {
+              const ws = e.target.value;
+              setCurrentWorkspace(ws);
+              loadMembers(ws);
+              loadStats(ws);
+            }}
+          >
+            {workspaceOptions.map((ws) => (
+              <option key={ws.slug} value={ws.slug}>
+                {ws.name}
+              </option>
+            ))}
+          </select>
+        )}
       </header>
 
       <div className="layout">
@@ -150,7 +203,7 @@ function App() {
               </ul>
             </>
           )}
-          <a href="/api/members/export" className="export-link">Download CSV for HR</a>
+          <a href={`/api/members/export?workspace=${currentWorkspace}`} className="export-link">Download CSV for HR</a>
         </aside>
       </div>
     </div>
