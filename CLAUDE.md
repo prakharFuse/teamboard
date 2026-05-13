@@ -74,7 +74,7 @@ teamboard/
 - **SQL**: Always use parameterized queries with `?` placeholders. Never use string concatenation for SQL.
 - **Type assertions**: SQLite query results are typed via `as unknown as T` (e.g., `as unknown as MemberRow[]`) because `node:sqlite` returns untyped results.
 - **PATCH pattern**: Uses `COALESCE(?, existing_column)` to allow partial updates — only provided fields are changed.
-- **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
+- **DELETE**: Soft-deletes (TM-101): sets `is_active = 0` and prepends `deactivated-` to the email (idempotent — only prefixed once). The row is retained in the database. Hard-deletes are no longer performed.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
 ### Client
@@ -84,37 +84,102 @@ teamboard/
 - **API calls**: Use relative paths (e.g., `/api/members`) — Vite proxies to the server during dev.
 - **Styling**: Plain CSS in `styles.css` — no Tailwind, no CSS-in-JS, no component library.
 
+### Middleware
+
+Two Express middleware functions are applied to all `/api/members*` routes (in order):
+
+#### `requireAuth` (`server/src/middleware/auth.ts`)
+
+Lenient authentication middleware backed by `@okta/jwt-verifier`.
+
+| Condition | Behaviour |
+|-----------|-----------|
+| No `Authorization` header | Sets `req.user = { email: 'anonymous', workspaces: ['parent'] }` and calls `next()` — backward-compatible path for Looker dashboards and BambooHR exporters |
+| `Authorization: Bearer <token>` present and **valid** | Extracts `email` and `groups` claims; filters `tb-workspace-*` groups to build `user.workspaces`; attaches to `req.user`; calls `next()` |
+| `Authorization: Bearer <token>` present but **invalid** | Returns `401 { "error": "Unauthorized" }` |
+
+Reads `OKTA_ISSUER` and `OKTA_CLIENT_ID` from `process.env`.
+
+#### `resolveWorkspace` (`server/src/middleware/workspace.ts`)
+
+Resolves the workspace context from the request.
+
+1. Reads the `X-Workspace-Id` request header; defaults to `'parent'` when absent.
+2. Looks up the workspace row by `slug` — returns `400 { "error": "Unknown workspace" }` if not found.
+3. Checks that `req.user.workspaces` includes the slug — returns `403 { "error": "Forbidden" }` if not.
+4. Attaches the full `WorkspaceRow` to `req.workspace` and calls `next()`.
+
+> The one-quarter backward-compatibility window means that clients omitting `X-Workspace-Id` transparently receive Parent Co data. See ROLLOUT.md for the cutover timeline.
+
 ## Database Schema
 
 ```sql
+CREATE TABLE workspaces (
+  id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug                   TEXT    NOT NULL UNIQUE,   -- e.g. 'parent', 'brightline'
+  name                   TEXT    NOT NULL,
+  bamboohr_dept_code_list TEXT   NOT NULL DEFAULT '[]', -- JSON array of valid dept codes
+  okta_group             TEXT    NOT NULL DEFAULT ''    -- e.g. 'tb-workspace-brightline'
+)
+
 CREATE TABLE members (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  name        TEXT    NOT NULL,
-  email       TEXT    NOT NULL UNIQUE,
-  role        TEXT    NOT NULL,
-  department  TEXT    NOT NULL,
-  start_date  TEXT    NOT NULL,             -- ISO date string: YYYY-MM-DD
-  is_active   INTEGER NOT NULL DEFAULT 1,   -- 1 = active, 0 = inactive
-  created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
-  updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  name         TEXT    NOT NULL,
+  email        TEXT    NOT NULL UNIQUE,
+  role         TEXT    NOT NULL,
+  department   TEXT    NOT NULL,
+  start_date   TEXT    NOT NULL,              -- ISO date string: YYYY-MM-DD
+  is_active    INTEGER NOT NULL DEFAULT 1,    -- 1 = active, 0 = inactive
+  created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+  updated_at   TEXT    NOT NULL DEFAULT (datetime('now')),
+  workspace_id INTEGER NOT NULL DEFAULT 1 REFERENCES workspaces(id)
+)
+
+CREATE TABLE departments (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+  code         TEXT    NOT NULL,
+  name         TEXT    NOT NULL,
+  UNIQUE(workspace_id, code)
+)
+
+CREATE TABLE audit_log (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  actor_email  TEXT    NOT NULL,
+  workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+  action       TEXT    NOT NULL,   -- e.g. 'member_create', 'member_update', 'member_delete', 'export_download'
+  entity_id    INTEGER,            -- NULL for actions not tied to a single entity
+  at           TEXT    NOT NULL DEFAULT (datetime('now'))
+)
+
+CREATE TABLE feature_flags (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL    -- string-encoded; 'true'/'false' for boolean flags
 )
 ```
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
 - Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- `workspace_id` defaults to `1` (the "Parent Co" workspace) for backward compatibility.
+- Migrations are applied automatically at server startup via `server/src/migrate.ts`.
+
+> **Production note:** Run ROLLOUT.md procedures before enabling `workspace_switcher_enabled` in production.
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
-| GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
-| DELETE | `/api/members/:id` | Hard delete member |
-| GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
-| GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/members` | List active members (`is_active = 1`), ordered by name; scoped to `X-Workspace-Id` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date`; scoped to workspace |
+| GET | `/api/members/:id` | Get single member by ID (includes inactive); scoped to workspace |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department`; scoped to workspace |
+| DELETE | `/api/members/:id` | Soft-delete: sets `is_active = 0`, prepends `deactivated-` to email (TM-101); scoped to workspace |
+| GET | `/api/members/export` | Download workspace-scoped members as CSV (`members.csv`); honours `?workspace=` query param |
+| GET | `/api/members/stats` | Total active count + breakdown by department; scoped to workspace |
+| POST | `/api/auth/signin` | Exchange Okta ID token for user profile + list of accessible `WorkspaceRow[]` objects |
+| GET | `/api/feature-flags` | Return all feature flags as `{ flags: Record<string, string> }`; returns `{ flags: {} }` if table absent |
+| PATCH | `/api/feature-flags/:key` | Update a single feature flag value; body: `{ value: string }` |
 
 > **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
 
