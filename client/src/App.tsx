@@ -15,6 +15,12 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+interface Workspace {
+  id: number;
+  slug: string;
+  name: string;
+}
+
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -26,19 +32,38 @@ function App() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  async function loadMembers(): Promise<void> {
-    const res = await fetch('/api/members');
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(
+    () => JSON.parse(sessionStorage.getItem('activeWorkspace') ?? 'null') as Workspace | null
+  );
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(
+    () => JSON.parse(sessionStorage.getItem('workspaces') ?? '[]') as Workspace[]
+  );
+  const [featureFlags, setFeatureFlags] = useState<{ workspaceSwitcher: boolean }>(
+    { workspaceSwitcher: false }
+  );
+
+  async function loadMembers(workspace?: Workspace | null): Promise<void> {
+    const ws = workspace !== undefined ? workspace : activeWorkspace;
+    const res = await fetch('/api/members', {
+      headers: { 'X-Workspace-Id': ws?.slug ?? '' },
+    });
     const data = await res.json();
     setMembers(data.members);
   }
 
-  async function loadStats(): Promise<void> {
-    const res = await fetch('/api/members/stats');
+  async function loadStats(workspace?: Workspace | null): Promise<void> {
+    const ws = workspace !== undefined ? workspace : activeWorkspace;
+    const res = await fetch('/api/members/stats', {
+      headers: { 'X-Workspace-Id': ws?.slug ?? '' },
+    });
     const data = await res.json();
     setStats(data);
   }
 
   useEffect(() => {
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => setFeatureFlags(data.featureFlags));
     loadMembers();
     loadStats();
   }, []);
@@ -48,7 +73,10 @@ function App() {
     setError('');
     const res = await fetch('/api/members', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Workspace-Id': activeWorkspace?.slug ?? '',
+      },
       body: JSON.stringify({ name, email, role, department, start_date: startDate }),
     });
     if (!res.ok) {
@@ -68,7 +96,10 @@ function App() {
 
   async function removeMember(id: number): Promise<void> {
     if (!confirm('Remove this team member?')) return;
-    await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    await fetch(`/api/members/${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Workspace-Id': activeWorkspace?.slug ?? '' },
+    });
     loadMembers();
     loadStats();
   }
@@ -78,6 +109,24 @@ function App() {
       <header>
         <h1>TeamBoard</h1>
         <p className="subtitle">Internal Team Directory</p>
+        {featureFlags.workspaceSwitcher && workspaces.length > 0 && (
+          <select
+            className="workspace-switcher"
+            value={activeWorkspace?.slug ?? ''}
+            onChange={e => {
+              const slug = e.target.value;
+              const ws = workspaces.find(w => w.slug === slug) ?? null;
+              setActiveWorkspace(ws);
+              sessionStorage.setItem('activeWorkspace', JSON.stringify(ws));
+              loadMembers(ws);
+              loadStats(ws);
+            }}
+          >
+            {workspaces.map(w => (
+              <option key={w.slug} value={w.slug}>{w.name}</option>
+            ))}
+          </select>
+        )}
       </header>
 
       <div className="layout">
@@ -150,7 +199,12 @@ function App() {
               </ul>
             </>
           )}
-          <a href="/api/members/export" className="export-link">Download CSV for HR</a>
+          <a
+            href={'/api/members/export?workspace=' + (activeWorkspace?.slug ?? 'parent-co')}
+            className="export-link"
+          >
+            Download CSV for HR
+          </a>
         </aside>
       </div>
     </div>
