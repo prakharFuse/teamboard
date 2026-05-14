@@ -106,7 +106,7 @@ The `department` column stores the BambooHR `dept_code`. Valid values are define
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- Seed data uses validated department codes consistent with `VALID_DEPARTMENTS` in `server/src/departments.ts`.
 
 ## API Endpoints
 

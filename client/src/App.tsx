@@ -15,6 +15,7 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+// NOTE: This list must stay in sync with VALID_DEPARTMENTS in server/src/departments.ts
 const DEPARTMENTS = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'Operations', 'Finance', 'HR', 'Legal'] as const;
 
 function App() {
