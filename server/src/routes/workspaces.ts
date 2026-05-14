@@ -10,7 +10,8 @@ interface WorkspaceRow {
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
-  const slugs: string[] = req.workspace!.accessibleWorkspaces;
+  if (!req.workspace) { res.status(500).json({ error: 'Internal server error' }); return; }
+  const slugs: string[] = req.workspace.accessibleWorkspaces;
 
   const placeholders = slugs.map(() => '?').join(', ');
   const db = getDb();
