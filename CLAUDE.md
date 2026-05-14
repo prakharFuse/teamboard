@@ -47,6 +47,7 @@ teamboard/
 │   └── src/
 │       ├── index.ts          — Express app entry point
 │       ├── db.ts             — SQLite singleton init + seed data
+│       ├── departments.ts    — VALID_DEPARTMENTS list + validation helpers
 │       └── routes/
 │           └── members.ts    — All member CRUD endpoints
 ├── client/
@@ -76,6 +77,7 @@ teamboard/
 - **PATCH pattern**: Uses `COALESCE(?, existing_column)` to allow partial updates — only provided fields are changed.
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
+- **Department validation**: `server/src/departments.ts` exports `VALID_DEPARTMENTS` — the canonical BambooHR dept_code list. POST and PATCH reject invalid values with 400.
 
 ### Client
 
@@ -100,6 +102,8 @@ CREATE TABLE members (
 )
 ```
 
+The `department` column stores the BambooHR `dept_code`. Valid values are defined in `server/src/departments.ts`.
+
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
 - Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
@@ -109,9 +113,9 @@ CREATE TABLE members (
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
-| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| POST | `/api/members` | Create member; required: `name, email, role, department, start_date` (dept validated) |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
-| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
+| PATCH | `/api/members/:id` | Partial update: `name, email, role, department` (dept validated) |
 | DELETE | `/api/members/:id` | Hard delete member |
 | GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
 | GET | `/api/members/stats` | Total active count + breakdown by department |
