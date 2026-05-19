@@ -21,8 +21,8 @@ interface MemberRow {
 }
 
 /** Attaches the resolved dept_name to a MemberRow for API responses. */
-function withDeptName(row: MemberRow): MemberRow & { dept_name: string | undefined } {
-  return { ...row, dept_name: getDeptName(row.dept_code) };
+function withDeptName(row: MemberRow): MemberRow & { dept_name: string | null } {
+  return { ...row, dept_name: getDeptName(row.dept_code) ?? null };
 }
 
 const router: Router = Router();
