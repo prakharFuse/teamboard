@@ -1,19 +1,33 @@
 // client/src/App.tsx — single-component UI with all state and fetch logic (TeamBoard)
 import { useState, useEffect } from 'react';
 
+const ALLOWED_DEPARTMENTS = [
+  { code: 'ENG',   name: 'Engineering' },
+  { code: 'PROD',  name: 'Product' },
+  { code: 'DES',   name: 'Design' },
+  { code: 'MKT',   name: 'Marketing' },
+  { code: 'SALES', name: 'Sales' },
+  { code: 'OPS',   name: 'Operations' },
+  { code: 'FIN',   name: 'Finance' },
+  { code: 'HR',    name: 'HR' },
+  { code: 'LEGAL', name: 'Legal' },
+];
+
 interface Member {
   id: number;
   name: string;
   email: string;
   role: string;
   department: string;
+  dept_code: string;
+  dept_name: string | null;
   start_date: string;
   is_active: number;
 }
 
 interface Stats {
   total: number;
-  byDepartment: { department: string; count: number }[];
+  byDepartment: { dept_code: string; dept_name: string | null; count: number }[];
 }
 
 function App() {
@@ -22,9 +36,10 @@ function App() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [department, setDepartment] = useState('');
+  const [deptCode, setDeptCode] = useState('');
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
+  const [errorAllowed, setErrorAllowed] = useState<string[] | null>(null);
   const [showForm, setShowForm] = useState(false);
 
   async function loadMembers(): Promise<void> {
@@ -47,20 +62,22 @@ function App() {
   async function addMember(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setError('');
+    setErrorAllowed(null);
     const res = await fetch('/api/members', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, role, department, start_date: startDate }),
+      body: JSON.stringify({ name, email, role, dept_code: deptCode, start_date: startDate }),
     });
     if (!res.ok) {
       const data = await res.json();
       setError(data.error || 'Failed to add member');
+      if (data.allowed) setErrorAllowed(data.allowed);
       return;
     }
     setName('');
     setEmail('');
     setRole('');
-    setDepartment('');
+    setDeptCode('');
     setStartDate('');
     setShowForm(false);
     loadMembers();
@@ -92,14 +109,26 @@ function App() {
 
           {showForm && (
             <form className="add-form" onSubmit={addMember}>
-              {error && <div className="error">{error}</div>}
+              {error && (
+                <div className="error">
+                  {error}
+                  {errorAllowed && (
+                    <span> Allowed codes: {errorAllowed.join(', ')}</span>
+                  )}
+                </div>
+              )}
               <div className="form-row">
                 <input placeholder="Full name" value={name} onChange={e => setName(e.target.value)} required />
                 <input placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={deptCode} onChange={e => setDeptCode(e.target.value)} required>
+                  <option value="">Select department…</option>
+                  {ALLOWED_DEPARTMENTS.map(d => (
+                    <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
@@ -123,7 +152,7 @@ function App() {
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
-                  <td><span className="dept-badge">{m.department}</span></td>
+                  <td><span className="dept-badge">{m.dept_name ?? m.dept_code}</span></td>
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
@@ -143,8 +172,8 @@ function App() {
               <div className="stat-total">{stats.total} active</div>
               <ul className="dept-list">
                 {stats.byDepartment.map(d => (
-                  <li key={d.department}>
-                    <span>{d.department}</span>
+                  <li key={d.dept_code}>
+                    <span>{d.dept_name ?? d.dept_code}</span>
                     <span className="count">{d.count}</span>
                   </li>
                 ))}
