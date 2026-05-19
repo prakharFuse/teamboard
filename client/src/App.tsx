@@ -33,6 +33,7 @@ interface Stats {
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [departments, setDepartments] = useState<{ code: string; name: string }[]>([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
@@ -54,9 +55,16 @@ function App() {
     setStats(data);
   }
 
+  async function loadDepartments(): Promise<void> {
+    const res = await fetch('/api/departments');
+    const data = await res.json();
+    setDepartments(data.departments);
+  }
+
   useEffect(() => {
     loadMembers();
     loadStats();
+    loadDepartments();
   }, []);
 
   async function addMember(e: React.FormEvent): Promise<void> {
@@ -125,7 +133,7 @@ function App() {
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
                 <select value={deptCode} onChange={e => setDeptCode(e.target.value)} required>
                   <option value="">Select department…</option>
-                  {ALLOWED_DEPARTMENTS.map(d => (
+                  {departments.map(d => (
                     <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
                   ))}
                 </select>

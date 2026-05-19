@@ -94,7 +94,11 @@ router.post('/', (req: Request, res: Response): void => {
     });
     return;
   }
-  const department = getDeptName(dept_code)!;
+  const department = getDeptName(dept_code);
+  if (!department) {
+    res.status(500).json({ error: 'dept_code resolved to unknown name' });
+    return;
+  }
   const db = getDb();
   try {
     db.prepare(
@@ -130,7 +134,14 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   // Resolve canonical department name only when a new code is supplied
-  const department = dept_code !== undefined ? getDeptName(dept_code)! : undefined;
+  let department: string | undefined;
+  if (dept_code !== undefined) {
+    department = getDeptName(dept_code);
+    if (!department) {
+      res.status(500).json({ error: 'dept_code resolved to unknown name' });
+      return;
+    }
+  }
   db.prepare(
     `UPDATE members SET
       name       = COALESCE(?, name),
