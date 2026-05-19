@@ -1,11 +1,5 @@
 # CLAUDE.md
 
-I'll systematically explore the repository to gather all the information needed for a comprehensive CLAUDE.md file.Now let me read all the key files in parallel:Now I have everything I need. Let me generate the comprehensive CLAUDE.md:
-
----
-
-# CLAUDE.md
-
 ## Project Overview
 
 **TeamBoard** is an internal team directory application for managing team member profiles, departments, and HR reporting. It is a full-stack TypeScript monorepo with an Express/SQLite backend and a React/Vite frontend.

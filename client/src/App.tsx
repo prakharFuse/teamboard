@@ -1,3 +1,4 @@
+// client/src/App.tsx — single-component UI with all state and fetch logic (TeamBoard)
 import { useState, useEffect } from 'react';
 
 interface Member {

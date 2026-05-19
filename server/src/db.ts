@@ -1,3 +1,4 @@
+// server/src/db.ts — SQLite singleton initialization and seed data (TeamBoard)
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';

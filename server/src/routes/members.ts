@@ -1,3 +1,4 @@
+// server/src/routes/members.ts — member CRUD endpoints (TeamBoard)
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
 
