@@ -77,6 +77,14 @@ teamboard/
 - **DELETE**: Hard deletes (removes row). `is_active` flag exists but the DELETE endpoint removes the record entirely.
 - **Error format**: `{ "error": string }` with appropriate HTTP status codes (400, 404, 409).
 
+#### Department Validation
+
+- **Source of truth**: `server/src/departments.ts` defines the 9 canonical department codes used by BambooHR. All validation logic imports from this module.
+- **Canonical codes**: `Engineering`, `Product`, `Design`, `Marketing`, `Sales`, `Operations`, `Finance`, `HR`, `Legal`
+- **POST validation**: The `POST /` handler rejects requests where `department` is not one of the 9 canonical codes, returning HTTP 400 with a message that lists both the invalid value and all allowed codes.
+- **PATCH validation**: The `PATCH /:id` handler applies the same check when `department` is provided in the request body (omitting the field is allowed for partial updates).
+- **CSV export header**: The `GET /export` handler uses the column header `dept_code` (instead of `department`) to satisfy BambooHR's expected field name. Column position is unchanged (5th column) because BambooHR processes columns by position, not header name.
+
 ### Client
 
 - **Single component**: All logic lives in `App.tsx` — `useState` for form fields, members list, stats, and UI visibility.
@@ -102,7 +110,8 @@ CREATE TABLE members (
 
 - The DB file lives at `data/team.db` relative to `process.cwd()` (project root).
 - `updated_at` is updated manually in the PATCH handler (not via trigger).
-- Note: seed data has inconsistent department names — some use `"Engineering"`, others `"Eng"`.
+- Seed data uses the correct canonical department codes (as defined in `departments.ts`). Earlier versions of the seed data contained legacy values such as `"Eng"` and `"Human Resources"` which have since been corrected to `"Engineering"` and `"HR"` respectively.
+- **Existing databases**: If a `data/team.db` was created before this fix was applied, it may still contain legacy invalid department codes. The seed data is only applied when the `members` table is empty, so pre-existing records are not automatically corrected. Wipe `data/team.db` and restart the server to re-seed with canonical codes.
 
 ## API Endpoints
 
@@ -110,13 +119,14 @@ CREATE TABLE members (
 |--------|------|-------------|
 | GET | `/api/members` | List active members (`is_active = 1`), ordered by name |
 | POST | `/api/members` | Create member; required: `name, email, role, department, start_date` |
+| GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
+| GET | `/api/members/stats` | Total active count + breakdown by department |
+| GET | `/api/members/departments` | List valid department codes |
 | GET | `/api/members/:id` | Get single member by ID (includes inactive) |
 | PATCH | `/api/members/:id` | Partial update: `name, email, role, department` |
 | DELETE | `/api/members/:id` | Hard delete member |
-| GET | `/api/members/export` | Download all members as CSV (`members.csv`) |
-| GET | `/api/members/stats` | Total active count + breakdown by department |
 
-> **Route order matters:** `/export` and `/stats` are registered before `/:id` to prevent them from being captured as ID params.
+> **Route order matters:** `/export`, `/stats`, and `/departments` are registered before `/:id` to prevent them from being captured as ID params.
 
 ## TypeScript Configuration
 
