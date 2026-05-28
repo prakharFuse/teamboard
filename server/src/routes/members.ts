@@ -37,6 +37,11 @@ router.get('/', (req: Request, res: Response): void => {
   res.json({ members: rows.map(withDeptName) });
 });
 
+// BambooHR processes columns by position — do NOT add, remove, or reorder columns
+// without coordinating with People Ops (KB Doc 2). Column order (7 cols):
+//   0:id  1:name  2:email  3:role  4:dept_code  5:start_date  6:is_active
+// Deactivated members MUST be included with is_active=0 so BambooHR can reconcile
+// departed employees (KB Doc 1). No WHERE clause — all rows are exported.
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
