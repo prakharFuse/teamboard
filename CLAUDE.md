@@ -117,13 +117,13 @@ CREATE TABLE members (
 
 `server/src/departments.ts` is the **single source of truth** for valid department codes. It exports:
 
-- `DEPT_CODE_TO_NAME` — mapping from BambooHR dept_code → canonical display name (e.g. `ENG → "Engineering"`)
+- `DEPT_CODE_TO_NAME` — mapping from BambooHR dept_code → canonical display name (e.g. `ENGR → "Engineering"`)
 - `ALLOWED_DEPT_CODES` — array of all valid codes used for validation
 - `isValidDeptCode(code)` — validator used by POST and PATCH handlers
 - `getDeptName(code)` — resolves a code to its display name
 - `legacyDeptToCode(name)` — maps old free-text names (e.g. `"Eng"`, `"Human Resources"`) to codes for the one-shot backfill
 
-> **TODO:** The 9 dept_codes in `departments.ts` are placeholders (`ENG`, `PROD`, `DES`, etc.). Replace them with the exact codes from the BambooHR attachment in TEAM-4 once People Ops provides the current canonical list.
+> **Confirmed codes (TEAM-4):** `ENGR`, `PROD`, `DSGN`, `MKTG`, `SALE`, `OPER`, `FINC`, `HRES`, `LEGL` — confirmed by People Ops and cross-checked against the BambooHR attachment. If BambooHR updates the allowed codes, update `departments.ts` and re-run the BambooHR sandbox import before merging (ask People Ops for credentials in #people-ops).
 
 When adding a new department: update `departments.ts` first (after BambooHR and People Ops confirm the code), then re-seed or migrate existing rows as needed.
 
