@@ -1,16 +1,19 @@
 // client/src/App.tsx — single-component UI with all state and fetch logic (TeamBoard)
 import { useState, useEffect } from 'react';
 
+// Kept in sync with server/src/departments.ts (codes confirmed by People Ops, TEAM-4).
+// The client also fetches /api/departments at startup; this constant is kept as a
+// compile-time reference and may be used as a fallback if the fetch fails.
 const ALLOWED_DEPARTMENTS = [
-  { code: 'ENG',   name: 'Engineering' },
-  { code: 'PROD',  name: 'Product' },
-  { code: 'DES',   name: 'Design' },
-  { code: 'MKT',   name: 'Marketing' },
-  { code: 'SALES', name: 'Sales' },
-  { code: 'OPS',   name: 'Operations' },
-  { code: 'FIN',   name: 'Finance' },
-  { code: 'HR',    name: 'HR' },
-  { code: 'LEGAL', name: 'Legal' },
+  { code: 'ENGR', name: 'Engineering' },
+  { code: 'PROD', name: 'Product' },
+  { code: 'DSGN', name: 'Design' },
+  { code: 'MKTG', name: 'Marketing' },
+  { code: 'SALE', name: 'Sales' },
+  { code: 'OPER', name: 'Operations' },
+  { code: 'FINC', name: 'Finance' },
+  { code: 'HRES', name: 'HR' },
+  { code: 'LEGL', name: 'Legal' },
 ];
 
 interface Member {

@@ -1,21 +1,21 @@
 // server/src/departments.ts — single source of truth for BambooHR department codes (TeamBoard)
-// TODO (TEAM-4): These codes are placeholders pending the official list from the TEAM-4 BambooHR
-// attachment. Once People Ops provides the CSV, replace this mapping with the exact values from
-// that file and verify with the BambooHR sandbox import before merging.
+// Codes confirmed by People Ops (TEAM-4) and cross-checked against the BambooHR attachment.
+// If BambooHR updates the allowed codes, update this file and re-run the BambooHR sandbox
+// import before merging (see KB Doc 4 — ask People Ops for sandbox credentials in #people-ops).
 
 // Mapping from dept_code → canonical department name (synced with BambooHR).
 // Canonical names from KB Doc 3: Engineering, Product, Design, Marketing, Sales,
 // Operations, Finance, HR, Legal.
 export const DEPT_CODE_TO_NAME: Record<string, string> = {
-  ENG:   'Engineering',
-  PROD:  'Product',
-  DES:   'Design',
-  MKT:   'Marketing',
-  SALES: 'Sales',
-  OPS:   'Operations',
-  FIN:   'Finance',
-  HR:    'HR',
-  LEGAL: 'Legal',
+  ENGR: 'Engineering',
+  PROD: 'Product',
+  DSGN: 'Design',
+  MKTG: 'Marketing',
+  SALE: 'Sales',
+  OPER: 'Operations',
+  FINC: 'Finance',
+  HRES: 'HR',
+  LEGL: 'Legal',
 };
 
 /** All valid BambooHR department codes. */
@@ -34,7 +34,7 @@ export function getDeptName(code: string): string | undefined {
 /**
  * Maps legacy free-text department strings (case-insensitive) to a dept_code.
  * Covers canonical names, common abbreviations, and the "common mistakes" listed
- * in KB Doc 3: 'Eng', 'Engg' → ENG; 'Human Resources' → HR; 'IT' → ENG.
+ * in KB Doc 3: 'Eng', 'Engg' → ENGR; 'Human Resources' → HRES; 'IT' → ENGR.
  * Returns undefined when the value cannot be recognised.
  */
 export function legacyDeptToCode(dept: string): string | undefined {
@@ -43,26 +43,26 @@ export function legacyDeptToCode(dept: string): string | undefined {
     case 'eng':
     case 'engg':
     case 'it':          // KB Doc 3: "IT is not a valid department — use Engineering"
-      return 'ENG';
+      return 'ENGR';
     case 'product':
       return 'PROD';
     case 'design':
-      return 'DES';
+      return 'DSGN';
     case 'marketing':
-      return 'MKT';
+      return 'MKTG';
     case 'sales':
-      return 'SALES';
+      return 'SALE';
     case 'operations':
     case 'ops':
-      return 'OPS';
+      return 'OPER';
     case 'finance':
     case 'fin':
-      return 'FIN';
+      return 'FINC';
     case 'hr':
     case 'human resources':  // KB Doc 3 common mistake
-      return 'HR';
+      return 'HRES';
     case 'legal':
-      return 'LEGAL';
+      return 'LEGL';
     default:
       return undefined;
   }
