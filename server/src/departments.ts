@@ -33,36 +33,39 @@ export function getDeptName(code: string): string | undefined {
 
 /**
  * Maps legacy free-text department strings (case-insensitive) to a dept_code.
- * Covers canonical names, common abbreviations, and the "common mistakes" listed
- * in KB Doc 3: 'Eng', 'Engg' → ENGR; 'Human Resources' → HRES; 'IT' → ENGR.
- * Returns undefined when the value cannot be recognised.
+ *
+ * Strategy:
+ *   1. Try to match canonical names directly via DEPT_CODE_TO_NAME — this way
+ *      a rename in the mapping table is automatically reflected here without
+ *      needing a second edit.
+ *   2. Fall through to an explicit switch for abbreviations and the "common
+ *      mistakes" listed in KB Doc 3 that are not canonical names.
+ *
+ * Returns undefined when the value cannot be recognised (caller should warn,
+ * not throw — see backfill in db.ts).
  */
 export function legacyDeptToCode(dept: string): string | undefined {
-  switch (dept.trim().toLowerCase()) {
-    case 'engineering':
+  const normalized = dept.trim().toLowerCase();
+
+  // Step 1 — match against canonical display names (derived from the mapping
+  // to avoid duplicating them here).
+  for (const [code, name] of Object.entries(DEPT_CODE_TO_NAME)) {
+    if (name.toLowerCase() === normalized) return code;
+  }
+
+  // Step 2 — abbreviations and KB Doc 3 "common mistakes" that don't match
+  // any canonical name.
+  switch (normalized) {
     case 'eng':
     case 'engg':
     case 'it':          // KB Doc 3: "IT is not a valid department — use Engineering"
       return 'ENGR';
-    case 'product':
-      return 'PROD';
-    case 'design':
-      return 'DSGN';
-    case 'marketing':
-      return 'MKTG';
-    case 'sales':
-      return 'SALE';
-    case 'operations':
     case 'ops':
       return 'OPER';
-    case 'finance':
     case 'fin':
       return 'FINC';
-    case 'hr':
-    case 'human resources':  // KB Doc 3 common mistake
+    case 'human resources':  // KB Doc 3 common mistake ("HR" is the canonical name)
       return 'HRES';
-    case 'legal':
-      return 'LEGL';
     default:
       return undefined;
   }
