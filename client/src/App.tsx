@@ -136,7 +136,7 @@ function App() {
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
                 <select value={deptCode} onChange={e => setDeptCode(e.target.value)} required>
                   <option value="">Select department…</option>
-                  {departments.map(d => (
+                  {(departments.length > 0 ? departments : ALLOWED_DEPARTMENTS).map(d => (
                     <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
                   ))}
                 </select>
