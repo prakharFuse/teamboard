@@ -67,6 +67,20 @@ test('GET /api/members lists the seeded active members', async () => {
   assert.ok(members.length > 0, 'seed data is present');
 });
 
+test('GET /api/members/count returns { count } of active seeded members', async () => {
+  const res = await call('GET', '/api/members/count');
+  assert.equal(res.status, 200);
+  const body = res.json as Record<string, unknown>;
+  assert.deepEqual(Object.keys(body).sort(), ['count']);
+  assert.equal(typeof body.count, 'number');
+  assert.ok((body.count as number) > 0, 'seed data has active members');
+
+  // Cross-check against the existing list endpoint.
+  const list = await call('GET', '/api/members');
+  const members = (list.json as { members: unknown[] }).members;
+  assert.equal(body.count, members.length);
+});
+
 test('POST /api/members rejects an invalid department with 400', async () => {
   // RED until TM-105 lands department validation. The API currently accepts
   // any department string and returns 201, so this assertion fails on main.
