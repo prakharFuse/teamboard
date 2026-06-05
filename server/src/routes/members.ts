@@ -68,6 +68,14 @@ router.get('/stats', (req: Request, res: Response): void => {
   res.json({ total: total.count, byDepartment: byDept });
 });
 
+router.get('/count', (req: Request, res: Response): void => {
+  const db = getDb();
+  const row = db.prepare(
+    'SELECT COUNT(*) as count FROM members WHERE is_active = 1'
+  ).get() as unknown as { count: number };
+  res.json({ count: row.count });
+});
+
 router.get('/:id', (req: Request, res: Response): void => {
   const db = getDb();
   const member = db.prepare(
