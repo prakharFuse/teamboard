@@ -75,7 +75,7 @@ test('GET /api/members/count returns { count } of active seeded members', async 
   assert.equal(typeof body.count, 'number');
   assert.ok((body.count as number) > 0, 'seed data has active members');
 
-  // Cross-check against the existing list endpoint.
+  // Cross-check: count must equal the number of active members in the list endpoint.
   const list = await call('GET', '/api/members');
   const members = (list.json as { members: unknown[] }).members;
   assert.equal(body.count, members.length);
