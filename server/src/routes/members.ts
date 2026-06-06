@@ -69,11 +69,16 @@ router.get('/stats', (req: Request, res: Response): void => {
 });
 
 router.get('/count', (req: Request, res: Response): void => {
-  const db = getDb();
-  const total = db.prepare(
-    'SELECT COUNT(*) as count FROM members WHERE is_active = 1'
-  ).get() as unknown as { count: number };
-  res.json({ count: total.count });
+  try {
+    const db = getDb();
+    const total = db.prepare(
+      'SELECT COUNT(*) as count FROM members WHERE is_active = 1'
+    ).get() as unknown as { count: number };
+    res.json({ count: total.count });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    res.status(500).json({ error: message });
+  }
 });
 
 router.get('/:id', (req: Request, res: Response): void => {
