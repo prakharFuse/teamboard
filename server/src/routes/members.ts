@@ -13,6 +13,8 @@ interface MemberRow {
   updated_at: string;
 }
 
+const VALID_DEPARTMENTS = ['Engineering', 'Product', 'Design', 'Marketing', 'Sales', 'Human Resources'];
+
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
@@ -27,6 +29,10 @@ router.post('/', (req: Request, res: Response): void => {
   const { name, email, role, department, start_date } = req.body;
   if (!name || !email || !role || !department || !start_date) {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
+    return;
+  }
+  if (!VALID_DEPARTMENTS.includes(department)) {
+    res.status(400).json({ error: `Invalid department. Must be one of: ${VALID_DEPARTMENTS.join(', ')}` });
     return;
   }
   const db = getDb();
