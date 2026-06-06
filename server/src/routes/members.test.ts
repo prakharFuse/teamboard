@@ -83,3 +83,11 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('GET /api/members/count returns the active member count', async () => {
+  const res = await call('GET', '/api/members/count');
+  assert.equal(res.status, 200);
+  const body = res.json as { count: unknown };
+  assert.equal(typeof body.count, 'number', 'count must be a number');
+  assert.ok((body.count as number) > 0, 'seeded DB has active members');
+});
