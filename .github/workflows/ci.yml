@@ -1,0 +1,42 @@
+name: CI
+
+# Runs on every PR (and on pushes to main for the baseline). This is the
+# check that Resolver's Fix-CI / Refine-PR flow reads back: the members API
+# contract test (server/src/routes/members.test.ts) is RED until department
+# validation lands (TM-105), so a PR against this repo gets a real failing
+# check run that surfaces as a selectable `CI — …` item.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: typecheck + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
