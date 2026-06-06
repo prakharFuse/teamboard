@@ -22,6 +22,7 @@ TeamBoard — internal team directory. Express + React + SQLite.
 - DELETE /api/members/:id — remove member
 - GET /api/members/export — CSV export (HR integration)
 - GET /api/members/stats — team statistics by department
+- GET /api/members/count — count of active members ({ count: number })
 
 ## Rules
 - API errors: `{ "error": string }` with appropriate HTTP status
