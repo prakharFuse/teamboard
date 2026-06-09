@@ -40,9 +40,14 @@ function App() {
   }
 
   async function loadDepartments(): Promise<void> {
-    const res = await fetch('/api/departments');
-    const data = await res.json() as { code: string; name: string }[];
-    setDepartments(data);
+    try {
+      const res = await fetch('/api/departments');
+      if (!res.ok) throw new Error(`Failed to load departments: ${res.status}`);
+      const data = await res.json() as { code: string; name: string }[];
+      setDepartments(data);
+    } catch (err) {
+      console.error('Could not load departments', err);
+    }
   }
 
   function deptDisplay(code: string): string {
