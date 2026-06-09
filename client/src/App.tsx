@@ -15,6 +15,22 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
+const DEPARTMENTS: { code: string; name: string }[] = [
+  { code: 'ENGR', name: 'Engineering' },
+  { code: 'PROD', name: 'Product' },
+  { code: 'DSGN', name: 'Design' },
+  { code: 'HRES', name: 'Human Resources' },
+  { code: 'FINC', name: 'Finance' },
+  { code: 'MKTG', name: 'Marketing' },
+  { code: 'SALE', name: 'Sales' },
+  { code: 'OPER', name: 'Operations' },
+  { code: 'LEGL', name: 'Legal' },
+];
+
+function deptDisplay(code: string): string {
+  return DEPARTMENTS.find(d => d.code === code)?.name ?? code;
+}
+
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -98,7 +114,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value="" disabled>Department</option>
+                  {DEPARTMENTS.map(d => (
+                    <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
@@ -122,7 +143,7 @@ function App() {
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
-                  <td><span className="dept-badge">{m.department}</span></td>
+                  <td><span className="dept-badge">{deptDisplay(m.department)}</span></td>
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
@@ -143,7 +164,7 @@ function App() {
               <ul className="dept-list">
                 {stats.byDepartment.map(d => (
                   <li key={d.department}>
-                    <span>{d.department}</span>
+                    <span>{deptDisplay(d.department)}</span>
                     <span className="count">{d.count}</span>
                   </li>
                 ))}
