@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
-import { DEPARTMENT_CODES, isValidDepartmentCode } from '../departments.js';
+import { DEPARTMENT_CODES, isValidDepartmentCode, getDepartmentName } from '../departments.js';
 
 interface MemberRow {
   id: number;
@@ -16,10 +16,9 @@ interface MemberRow {
 
 const router: Router = Router();
 
-function departmentError(): { error: string; allowed_codes: readonly string[] } {
+function departmentError(): { error: string } {
   return {
     error: `Invalid department code. Must be one of: ${DEPARTMENT_CODES.join(', ')}`,
-    allowed_codes: DEPARTMENT_CODES,
   };
 }
 
@@ -60,9 +59,9 @@ router.post('/', (req: Request, res: Response): void => {
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
-  const header = 'id,name,email,role,dept_code,start_date,is_active';
+  const header = 'id,name,email,role,department,start_date,is_active';
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
+    `${r.id},${r.name},${r.email},${r.role},${getDepartmentName(r.department) ?? r.department},${r.start_date},${r.is_active}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');

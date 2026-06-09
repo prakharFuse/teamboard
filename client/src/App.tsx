@@ -15,25 +15,10 @@ interface Stats {
   byDepartment: { department: string; count: number }[];
 }
 
-const DEPARTMENTS: { code: string; name: string }[] = [
-  { code: 'ENGR', name: 'Engineering' },
-  { code: 'PROD', name: 'Product' },
-  { code: 'DSGN', name: 'Design' },
-  { code: 'HRES', name: 'Human Resources' },
-  { code: 'FINC', name: 'Finance' },
-  { code: 'MKTG', name: 'Marketing' },
-  { code: 'SALE', name: 'Sales' },
-  { code: 'OPER', name: 'Operations' },
-  { code: 'LEGL', name: 'Legal' },
-];
-
-function deptDisplay(code: string): string {
-  return DEPARTMENTS.find(d => d.code === code)?.name ?? code;
-}
-
 function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [departments, setDepartments] = useState<{ code: string; name: string }[]>([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
@@ -54,9 +39,20 @@ function App() {
     setStats(data);
   }
 
+  async function loadDepartments(): Promise<void> {
+    const res = await fetch('/api/departments');
+    const data = await res.json();
+    setDepartments(data);
+  }
+
+  function deptDisplay(code: string): string {
+    return departments.find(d => d.code === code)?.name ?? code;
+  }
+
   useEffect(() => {
     loadMembers();
     loadStats();
+    loadDepartments();
   }, []);
 
   async function addMember(e: React.FormEvent): Promise<void> {
@@ -116,7 +112,7 @@ function App() {
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
                 <select value={department} onChange={e => setDepartment(e.target.value)} required>
                   <option value="" disabled>Department</option>
-                  {DEPARTMENTS.map(d => (
+                  {departments.map(d => (
                     <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
                   ))}
                 </select>
