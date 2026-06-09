@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { DEPARTMENT_CODES, isValidDepartmentCode, getDepartmentName } from '../departments.js';
 
 interface MemberRow {
   id: number;
@@ -15,6 +16,12 @@ interface MemberRow {
 
 const router: Router = Router();
 
+function departmentError(): { error: string } {
+  return {
+    error: `Invalid department code. Must be one of: ${DEPARTMENT_CODES.join(', ')}`,
+  };
+}
+
 router.get('/', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare(
@@ -27,6 +34,10 @@ router.post('/', (req: Request, res: Response): void => {
   const { name, email, role, department, start_date } = req.body;
   if (!name || !email || !role || !department || !start_date) {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
+    return;
+  }
+  if (!isValidDepartmentCode(department)) {
+    res.status(400).json(departmentError());
     return;
   }
   const db = getDb();
@@ -50,7 +61,7 @@ router.get('/export', (req: Request, res: Response): void => {
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
   const header = 'id,name,email,role,department,start_date,is_active';
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
+    `${r.id},${r.name},${r.email},${r.role},${getDepartmentName(r.department) ?? r.department},${r.start_date},${r.is_active}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
@@ -90,6 +101,10 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
+  if (department !== undefined && !isValidDepartmentCode(department)) {
+    res.status(400).json(departmentError());
+    return;
+  }
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
