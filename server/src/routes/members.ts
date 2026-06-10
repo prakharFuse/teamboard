@@ -1,17 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
-
-interface MemberRow {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  start_date: string;
-  is_active: number;
-  created_at: string;
-  updated_at: string;
-}
+import { deactivateMember, RetentionPolicyViolationError } from '../services/retention.js';
+import type { MemberRow } from '../types.js';
 
 const router: Router = Router();
 
@@ -48,9 +38,12 @@ router.post('/', (req: Request, res: Response): void => {
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
-  const header = 'id,name,email,role,department,start_date,is_active';
+  const header = 'id,name,email,role,department,start_date,is_active,deactivation_date';
+  function csvField(val: string): string {
+    return `"${val.replace(/"/g, '""')}"`;
+  }
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
+    `${r.id},${csvField(r.name)},${csvField(r.email)},${csvField(r.role)},${csvField(r.department)},${r.start_date},${r.is_active},${r.deactivation_date ?? ''}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
@@ -112,8 +105,24 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
-  res.json({ success: true });
+  if (member.is_active === 0) {
+    res.status(409).json({ error: 'Member is already deactivated' });
+    return;
+  }
+  try {
+    const updated = deactivateMember(db, member.id);
+    if (!updated) {
+      res.status(404).json({ error: 'Member not found after deactivation' });
+      return;
+    }
+    res.status(200).json(updated);
+  } catch (err: unknown) {
+    if (err instanceof RetentionPolicyViolationError) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
 });
 
 export default router;

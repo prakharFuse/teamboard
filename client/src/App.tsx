@@ -8,6 +8,7 @@ interface Member {
   department: string;
   start_date: string;
   is_active: number;
+  deactivation_date: string | null;
 }
 
 interface Stats {
@@ -67,8 +68,14 @@ function App() {
   }
 
   async function removeMember(id: number): Promise<void> {
-    if (!confirm('Remove this team member?')) return;
-    await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    if (!confirm('Remove this team member? Their record will be hidden from the active directory but retained for HR compliance.')) return;
+    setError('');
+    const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      setError(data.error || 'Failed to remove member');
+      return;
+    }
     loadMembers();
     loadStats();
   }
@@ -104,6 +111,8 @@ function App() {
               <button type="submit">Add Member</button>
             </form>
           )}
+
+          {error && !showForm && <div className="error">{error}</div>}
 
           <table className="members-table">
             <thead>

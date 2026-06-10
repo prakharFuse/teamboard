@@ -24,10 +24,18 @@ export function getDb(): DatabaseSync {
         department TEXT NOT NULL,
         start_date TEXT NOT NULL,
         is_active INTEGER NOT NULL DEFAULT 1,
+        deactivation_date TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
+
+    const columns = db.prepare('PRAGMA table_info(members)').all() as { name: string }[];
+    if (!columns.some((col) => col.name === 'deactivation_date')) {
+      db.exec('ALTER TABLE members ADD COLUMN deactivation_date TEXT NULL');
+    }
+
+    db.exec('CREATE INDEX IF NOT EXISTS idx_members_is_active ON members(is_active)');
 
     const count = db.prepare('SELECT COUNT(*) as count FROM members').get() as unknown as { count: number };
     if (count.count === 0) {
