@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { deactivateMember, hardDeleteMember, RetentionPolicyViolationError } from '../services/retention.js';
 
 interface MemberRow {
   id: number;
@@ -9,6 +10,7 @@ interface MemberRow {
   department: string;
   start_date: string;
   is_active: number;
+  deactivation_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -48,9 +50,9 @@ router.post('/', (req: Request, res: Response): void => {
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
-  const header = 'id,name,email,role,department,start_date,is_active';
+  const header = 'id,name,email,role,department,start_date,is_active,deactivation_date';
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
+    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active},${r.deactivation_date ?? ''}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
@@ -112,8 +114,16 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
-  db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
-  res.json({ success: true });
+  try {
+    const updated = deactivateMember(db, member.id);
+    res.status(200).json(updated);
+  } catch (err: unknown) {
+    if (err instanceof RetentionPolicyViolationError) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
+    throw err;
+  }
 });
 
 export default router;
