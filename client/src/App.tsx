@@ -67,7 +67,7 @@ function App() {
   }
 
   async function removeMember(id: number): Promise<void> {
-    if (!confirm('Remove this team member?')) return;
+    if (!confirm('Deactivate this team member? Their record will be retained for HR but hidden from the directory.')) return;
     await fetch(`/api/members/${id}`, { method: 'DELETE' });
     loadMembers();
     loadStats();
@@ -126,7 +126,7 @@ function App() {
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
-                      Remove
+                      Deactivate
                     </button>
                   </td>
                 </tr>
