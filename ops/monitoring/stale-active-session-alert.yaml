@@ -1,0 +1,71 @@
+# -------------------------------------------------------------------
+# CANARY MONITOR — temporary artefact introduced by TEAM-6
+#
+# Purpose : Detect departed-state members whose SSO sessions remain
+#           active beyond the configured grace period, confirming the
+#           revocation defect identified in the TEAM-6 RCA.
+#
+# Lifecycle: Remove or promote to permanent once the SSO-revocation
+#            fix ships and has been stable for two release cycles.
+#            See docs/rca/TEAM-6-sso-revocation-gap.md §Interim Mitigations
+#            and docs/runbooks/sso-revocation-runbook.md.
+#
+# Owner   : team:teamboard  (on-call rotation via PagerDuty service
+#           "TeamBoard Platform")
+# Ticket  : TEAM-6
+# Created : 2026-06-10
+# -------------------------------------------------------------------
+
+name: "[Canary][TEAM-6] Departed members with active SSO sessions past grace period"
+type: query alert
+
+# Datadog log-based metric query.
+# metric  : custom.teamboard.member_lifecycle.sso_session_active
+#           (emitted by the sync-instrumentation helper; see
+#            server/src/lifecycle/sync-instrumentation.ts)
+# filter  : lifecycle_state:departed AND session_age_hours > grace_period_hours
+# Fires when count > 0 over a 15-minute evaluation window.
+query: >
+  sum(last_15m):
+    sum:custom.teamboard.member_lifecycle.sso_session_active{
+      lifecycle_state:departed,
+      session_age_gt_grace:true
+    }.as_count() > 0
+
+message: |
+  ## [Canary] Stale SSO session detected — TEAM-6
+
+  **{{value}}** member(s) with `lifecycle_state:departed` still have an
+  active SSO session that has exceeded the grace period.
+
+  **Immediate action:** follow the revocation runbook:
+  docs/runbooks/sso-revocation-runbook.md
+
+  **Script (dry-run first):**
+  ```
+  npx ts-node scripts/sso-revoke.ts --member-id <ID> --idp-provider <IDP> --dry-run
+  ```
+
+  @pagerduty-TeamBoard-Platform @slack-teamboard-alerts
+
+options:
+  notify_no_data: false
+  no_data_timeframe: 60          # minutes; alert if metric goes missing > 1 h
+  evaluation_delay: 60           # seconds; allow metric pipeline to settle
+  new_host_delay: 0
+  renotify_interval: 60          # re-notify every 60 min while open
+  escalation_message: |
+    TEAM-6 canary still firing after 60 min.
+    Escalating to security-on-call — SSO session not yet revoked.
+    @pagerduty-Security-Oncall
+  thresholds:
+    critical: 0                  # any departed member with live session is critical
+  include_tags: true
+  require_full_window: false
+
+tags:
+  - team:teamboard
+  - ticket:TEAM-6
+  - lifecycle:canary
+  - service:teamboard-platform
+  - env:production
