@@ -65,10 +65,6 @@ async function createMember(suffix: string): Promise<number> {
   return (body as { id: number }).id;
 }
 
-before(() => {
-  // DB schema is initialised lazily on the first request — nothing to do here.
-});
-
 test('DELETE /api/members/:id — subsequent GET returns 404', async () => {
   const id = await createMember('a');
 
