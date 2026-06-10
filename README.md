@@ -58,3 +58,10 @@ SQLite file at `data/team.db`, auto-created on first run with sample data (8 tea
 | `pnpm build` | Compile server TypeScript |
 | `pnpm typecheck` | Type-check both server and client |
 | `pnpm start` | Run compiled server only |
+
+## Investigations and runbooks
+
+| Document | Description |
+|----------|-------------|
+| [TEAM-6 RCA](docs/rca/TEAM-6-rca.md) | Root cause analysis for HR data pipeline failures and SSO security gap in member lifecycle |
+| [SSO Revocation Runbook](docs/runbooks/sso-revocation-runbook.md) | Manual procedure for revoking SSO access for departed employees |
