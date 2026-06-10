@@ -158,6 +158,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 
   // --dry-run is the default; --apply takes precedence when both are supplied
   if (!apply) dryRun = true;
+  if (apply) dryRun = false;
 
   return {
     memberId: memberId as number,
