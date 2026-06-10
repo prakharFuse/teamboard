@@ -105,6 +105,10 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
+  if (member.is_active === 0) {
+    res.status(409).json({ error: 'Member is already deactivated' });
+    return;
+  }
   try {
     const updated = deactivateMember(db, member.id);
     if (!updated) {
