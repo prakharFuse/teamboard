@@ -175,7 +175,11 @@ function loadCache(): RevocationCache {
   try {
     if (!fs.existsSync(CACHE_PATH)) return {};
     const raw = fs.readFileSync(CACHE_PATH, 'utf8');
-    return JSON.parse(raw) as RevocationCache;
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+    return parsed as RevocationCache;
   } catch {
     // Corrupted cache — start fresh; the file will be rewritten on next apply
     return {};
