@@ -1,19 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
-import { deactivateMember, hardDeleteMember, RetentionPolicyViolationError } from '../services/retention.js';
-
-interface MemberRow {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  start_date: string;
-  is_active: number;
-  deactivation_date: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { deactivateMember, RetentionPolicyViolationError } from '../services/retention.js';
+import type { MemberRow } from '../types.js';
 
 const router: Router = Router();
 
@@ -51,8 +39,11 @@ router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
   const header = 'id,name,email,role,department,start_date,is_active,deactivation_date';
+  function csvField(val: string): string {
+    return `"${val.replace(/"/g, '""')}"`;
+  }
   const csv = [header, ...rows.map(r =>
-    `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active},${r.deactivation_date ?? ''}`
+    `${r.id},${csvField(r.name)},${csvField(r.email)},${csvField(r.role)},${csvField(r.department)},${r.start_date},${r.is_active},${r.deactivation_date ?? ''}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
@@ -116,6 +107,10 @@ router.delete('/:id', (req: Request, res: Response): void => {
   }
   try {
     const updated = deactivateMember(db, member.id);
+    if (!updated) {
+      res.status(404).json({ error: 'Member not found after deactivation' });
+      return;
+    }
     res.status(200).json(updated);
   } catch (err: unknown) {
     if (err instanceof RetentionPolicyViolationError) {

@@ -1,4 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
+import type { MemberRow } from '../types.js';
 
 export const RETENTION_YEARS = 7;
 
@@ -25,24 +26,11 @@ export function enforceRetentionPolicy(
   }
 }
 
-interface MemberRow {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  start_date: string;
-  is_active: number;
-  deactivation_date: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export function deactivateMember(db: DatabaseSync, id: number): MemberRow {
+export function deactivateMember(db: DatabaseSync, id: number): MemberRow | null {
   db.prepare(
     `UPDATE members SET is_active = 0, deactivation_date = date('now'), updated_at = datetime('now') WHERE id = ?`
   ).run(id);
-  return db.prepare('SELECT * FROM members WHERE id = ?').get(id) as unknown as MemberRow;
+  return db.prepare('SELECT * FROM members WHERE id = ?').get(id) as unknown as MemberRow | null;
 }
 
 export function hardDeleteMember(db: DatabaseSync, id: number): void {
