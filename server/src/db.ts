@@ -24,10 +24,18 @@ export function getDb(): DatabaseSync {
         department TEXT NOT NULL,
         start_date TEXT NOT NULL,
         is_active INTEGER NOT NULL DEFAULT 1,
+        removed_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
+
+    // Idempotent migration: add removed_at to databases created before this column existed.
+    const columns = db.prepare('PRAGMA table_info(members)').all() as unknown as { name: string }[];
+    const hasRemovedAt = columns.some(col => col.name === 'removed_at');
+    if (!hasRemovedAt) {
+      db.exec('ALTER TABLE members ADD COLUMN removed_at TEXT');
+    }
 
     const count = db.prepare('SELECT COUNT(*) as count FROM members').get() as unknown as { count: number };
     if (count.count === 0) {
