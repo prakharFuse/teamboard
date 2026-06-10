@@ -1,0 +1,97 @@
+# ---------------------------------------------------------------------------
+# RETIRE OR PROMOTE — action required by 2026-07-10
+#
+# This is a SHORT-LIVED canary monitor targeting env:staging only.
+# It was created as Interim Mitigation #4 for TEAM-6 (stale SSO session
+# security gap) and is NOT deployed to production.
+#
+# Before the expires date you MUST choose one of:
+#
+#   PROMOTE → complete TEAM-10: update env tag to env:production, remove
+#             the expires tag and this comment, review thresholds for
+#             production traffic, and wire on-call routing.
+#
+#   RETIRE  → delete this file and close TEAM-10 as "won't do" with a
+#             written justification recorded in TEAM-6-followup-tickets.md.
+#
+# Owner: Ops / Infra   Depends on: TEAM-9 (SSO revocation hook)
+# ---------------------------------------------------------------------------
+
+name: "[CANARY][STAGING] Stale SSO session — member deleted but IdP not revoked"
+
+type: log alert
+
+# ---------------------------------------------------------------------------
+# Query
+# Counts log events where an offboarded member (DELETE from TeamBoard) still
+# has an active SSO authentication event more than :threshold_hours after
+# their departure timestamp.  Adjust the log index / facet names to match
+# your Datadog organisation's ingestion pipeline.
+# ---------------------------------------------------------------------------
+query: >
+  logs("service:teamboard-api
+        @event_type:sso_auth_success
+        @member.status:deleted
+        @sso_revoked:false").index("*").rollup("count").by("@member.id").last("1h") > 0
+
+message: |
+  **[CANARY — staging only]** One or more deleted TeamBoard members authenticated
+  via SSO within the last hour without a recorded revocation event.
+
+  This indicates the manual IdP deprovisioning step (or the future automated
+  revocation hook from TEAM-9) was not executed after the member was removed
+  from TeamBoard.
+
+  **Immediate actions**
+  1. Open the SSO revocation runbook:
+     https://github.com/your-org/teamboard/blob/main/docs/runbooks/sso-revocation-runbook.md
+  2. Run `npx ts-node scripts/sso-revoke.ts --account-id <id> --idp <provider> --commit --reason "stale-session-monitor alert"`
+  3. Confirm the member's session is terminated in the IdP admin console.
+  4. Record the action in the audit log as described in the runbook.
+
+  **Context**
+  - RCA: docs/rca/TEAM-6-rca.md
+  - SSO deep-dive: docs/rca/TEAM-6-sso-deep-dive.md
+  - Blast-radius query: scripts/audit-backfill-query.sql
+
+  @slack-teamboard-staging-alerts
+
+tags:
+  - service:teamboard-api
+  - team:infra
+  - env:staging
+  - ticket:TEAM-6
+  - monitor-type:canary
+  - expires:2026-07-10
+
+options:
+  # ---------------------------------------------------------------------------
+  # Thresholds (staging — review before promoting to production)
+  # ---------------------------------------------------------------------------
+  thresholds:
+    critical: 1       # any stale auth in staging is immediately actionable
+    warning: 0        # warn at zero so the channel gets a heads-up on first hit
+
+  threshold_windows:
+    trigger_window: "last_10m"
+    recovery_window: "last_15m"
+
+  # Notify on recovery so the on-call knows the session was successfully revoked
+  notify_no_data: false
+  no_data_timeframe: 60          # minutes — silence no-data noise in staging
+  notify_audit: true
+  require_full_window: false
+  include_tags: true
+  renotify_interval: 60          # re-alert every 60 min while still open
+
+  # Restrict to staging log index; change to "*" or a production index on promote
+  indexes:
+    - staging-main
+
+  # Group by member ID so each affected account generates a distinct alert
+  group_by:
+    - "@member.id"
+    - "@idp_provider"
+
+  # Priority — escalate to P1 if multiple members are affected simultaneously
+  priority: 3   # P3 in staging; set to P1 in production after TEAM-9 ships
