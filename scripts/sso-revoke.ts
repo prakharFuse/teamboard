@@ -52,10 +52,14 @@ function fatal(msg: string): never {
   process.exit(1);
 }
 
-function validateArgs(): void {
+function isIdpProvider(value: string): value is IdpProvider {
+  return (VALID_IDPS as string[]).includes(value);
+}
+
+function validateArgs(): { accountId: string; idp: IdpProvider; isDryRun: boolean; reason: string } {
   if (!args['account-id']) fatal('--account-id is required');
   if (!args.idp)           fatal('--idp is required (okta | azure_ad | google_workspace)');
-  if (!VALID_IDPS.includes(args.idp as IdpProvider)) {
+  if (!isIdpProvider(args.idp)) {
     fatal(`--idp must be one of: ${VALID_IDPS.join(', ')}`);
   }
   // Double-action guard: passing both flags (or neither) is a hard error so
@@ -66,6 +70,12 @@ function validateArgs(): void {
   if (!args['dry-run'] && !args.commit) {
     fatal('Supply exactly one of --dry-run or --commit');
   }
+  return {
+    accountId: args['account-id'],
+    idp:       args.idp,
+    isDryRun:  args['dry-run'] ?? false,
+    reason:    args.reason ?? '',
+  };
 }
 
 // ── IdP client stubs — TODO: implement before using --commit ────────────────
@@ -108,19 +118,14 @@ function emitAudit(record: AuditRecord): void {
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-  validateArgs();
-
-  const accountId = args['account-id'] as string;
-  const idp       = args.idp as IdpProvider;
-  const isDryRun  = args['dry-run'] as boolean;
-  const reason    = args.reason as string;
+  const { accountId, idp, isDryRun, reason } = validateArgs();
 
   const baseRecord = {
     event:         'sso_revoke' as const,
     timestamp_utc: new Date().toISOString(),
     account_id:    accountId,
     idp_provider:  idp,
-    member_email:  null as null,  // TODO(TEAM-9): look up from DB via account_id
+    member_email:  null,  // TODO(TEAM-9): look up from DB via account_id
     reason,
   };
 

@@ -9,7 +9,7 @@
  * Mirrors members.test.ts setup exactly: in-memory SQLite, in-process Express,
  * no test framework dep beyond node:test.
  */
-import { test, before } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
@@ -58,7 +58,11 @@ async function createMember(suffix: string): Promise<number> {
     start_date: '2024-01-01',
   });
   assert.equal(res.status, 201, `createMember: expected 201, got ${res.status}`);
-  return (res.json as { id: number }).id;
+  const body = res.json;
+  if (typeof body !== 'object' || body === null || !('id' in body)) {
+    throw new Error('unexpected shape');
+  }
+  return (body as { id: number }).id;
 }
 
 before(() => {
