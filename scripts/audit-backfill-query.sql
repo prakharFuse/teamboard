@@ -18,7 +18,7 @@
 -- -----
 -- SQLite (development / runbook use):
 --   sed 's/:threshold_hours/48/g' scripts/audit-backfill-query.sql \
---     | sqlite3 data/team.db
+--     | sqlite3 data/teamboard.db
 --
 -- PostgreSQL (after adapting per the ADAPTATION section below):
 --   psql $DATABASE_URL \
@@ -118,7 +118,7 @@ WHERE m.is_active = 0
 --
 -- Example:
 --   sed 's/:threshold_hours/48/g' scripts/audit-backfill-query.sql \
---     | sqlite3 -header -csv data/team.db \
+--     | sqlite3 -header -csv data/teamboard.db \
 --     > /tmp/pending-revocations-$(date +%Y%m%d).csv
 -- ===========================================================================
 

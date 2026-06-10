@@ -200,7 +200,7 @@ The following mitigations have been implemented or scheduled as part of TEAM-6 t
 | Datadog canary alert for stale active sessions | **Implemented** | `ops/monitoring/stale-active-session-alert.yaml` |
 | BambooHR trace helper (feature-flag gated) | **Implemented** | `server/src/lifecycle/sync-instrumentation.ts` |
 | Audit backfill query | **Implemented** | `scripts/audit-backfill-query.sql` |
-| Lifecycle state-machine RED test (confirms defect) | **Implemented** | `server/src/lifecycle/lifecycle-state-machine.test.ts` |
+| Lifecycle state-machine RED test (confirms defect) | **Planned** | `server/src/lifecycle/lifecycle-state-machine.test.ts` |
 
 **Not in scope for TEAM-6 (structural fixes):**  
 - Persistent lifecycle transition table  
@@ -224,6 +224,7 @@ The table below lists recommended follow-on work ordered by risk reduction value
 | P2 | **Add idempotency key to sync operations** | Addresses §5.3; prerequisite for safe retries | M |
 | P2 | **Promote Datadog canary alert to permanent monitor** | Addresses §5.4; remove canary tag after blast radius confirmed clean | S |
 | P2 | **Per-IdP revocation integration testing** | Confirms SSO deep-dive findings; prevents regression | M |
+| P2 | **Write RED lifecycle-state-machine test** | Confirms `departed → revoked` transition defect; provides failing regression baseline (`server/src/lifecycle/lifecycle-state-machine.test.ts`) | S |
 | P3 | **Data model audit table fields** | Addresses §5.4 long-term; see `TEAM-6-data-model-gap-recommendations.md` | M |
 | P3 | **Customer-facing sync status in admin console** | Reduces future escalation volume | M |
 | P3 | **BambooHR consent re-validation for affected customers** | Closes data-access consent gaps identified in BambooHR deep-dive | S |

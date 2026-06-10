@@ -110,7 +110,6 @@ interface ParsedArgs {
   memberId: number;
   idpProvider: IdpProvider;
   dryRun: boolean;
-  apply: boolean;
   forceDeparted: boolean;
 }
 
@@ -164,7 +163,6 @@ function parseArgs(argv: string[]): ParsedArgs {
     memberId: memberId as number,
     idpProvider: idpProvider as IdpProvider,
     dryRun,
-    apply,
     forceDeparted,
   };
 }
@@ -257,7 +255,7 @@ function fatal(msg: string): never {
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  const { memberId, idpProvider, dryRun, apply, forceDeparted } = parseArgs(process.argv);
+  const { memberId, idpProvider, dryRun, forceDeparted } = parseArgs(process.argv);
 
   // Load member from DB
   const db = getDb();

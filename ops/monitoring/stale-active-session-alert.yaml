@@ -43,7 +43,7 @@ message: |
 
   **Script (dry-run first):**
   ```
-  npx ts-node scripts/sso-revoke.ts --member-id <ID> --idp-provider <IDP> --dry-run
+  npx tsx scripts/sso-revoke.ts --member-id <ID> --idp-provider <IDP> --dry-run
   ```
 
   @pagerduty-TeamBoard-Platform @slack-teamboard-alerts

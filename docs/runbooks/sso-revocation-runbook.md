@@ -133,8 +133,10 @@ while IFS='|' read -r member_id idp_provider; do
     --idp-provider "${idp_provider}" \
     --apply
 done < <(sqlite3 -separator '|' data/teamboard.db \
-  "SELECT id, idp_provider FROM members WHERE status='departed' \
-   AND id NOT IN (SELECT member_id FROM sso_revoke_log)")
+  "SELECT id, NULL AS idp_provider FROM members WHERE is_active = 0
+   -- Placeholder: no sso_revoke_log table yet.
+   -- Add: AND id NOT IN (SELECT member_id FROM sso_revoke_log)
+   -- once ADAPTATION §3 of scripts/audit-backfill-query.sql is implemented.")
 ```
 
 Redirect stdout to a log file for the post-run audit trail:
