@@ -52,6 +52,21 @@ async function call(
   }
 }
 
+async function callText(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -82,4 +97,87 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+});
+
+test('DELETE /api/members/:id soft-deletes: returns is_active=0 and a valid deactivation_date', async () => {
+  const listRes = await call('GET', '/api/members');
+  const members = (listRes.json as { members: Array<{ id: number }> }).members;
+  assert.ok(members.length > 0, 'seeded members must be present');
+  const { id } = members[0];
+
+  const delRes = await call('DELETE', `/api/members/${id}`);
+  assert.equal(delRes.status, 200);
+
+  const body = delRes.json as { is_active: number; deactivation_date: string | null };
+  assert.equal(body.is_active, 0, 'is_active should be 0 after soft-delete');
+  assert.ok(
+    typeof body.deactivation_date === 'string' && body.deactivation_date.length > 0,
+    'deactivation_date should be a non-empty string',
+  );
+  assert.match(
+    body.deactivation_date as string,
+    /^\d{4}-\d{2}-\d{2}$/,
+    'deactivation_date must match YYYY-MM-DD',
+  );
+});
+
+test('DELETE /api/members/:id removes member from active directory and decrements stats total', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Visibility Test Member',
+    email: `vis-${Date.now()}@company.com`,
+    role: 'Analyst',
+    department: 'Engineering',
+    start_date: '2024-06-01',
+  });
+  assert.equal(created.status, 201);
+  const { id: newId } = created.json as { id: number };
+
+  const beforeStats = await call('GET', '/api/members/stats');
+  const totalBefore = (beforeStats.json as { total: number }).total;
+
+  const delRes = await call('DELETE', `/api/members/${newId}`);
+  assert.equal(delRes.status, 200);
+
+  const listRes = await call('GET', '/api/members');
+  const ids = (listRes.json as { members: Array<{ id: number }> }).members.map(m => m.id);
+  assert.ok(!ids.includes(newId), 'deactivated member must not appear in active directory');
+
+  const afterStats = await call('GET', '/api/members/stats');
+  const totalAfter = (afterStats.json as { total: number }).total;
+  assert.equal(totalAfter, totalBefore - 1, 'stats total must decrease by 1 after deactivation');
+});
+
+test('GET /api/members/export CSV includes deactivated member with is_active=0 and correct headers', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'CSV Export Test',
+    email: `csv-${Date.now()}@company.com`,
+    role: 'Designer',
+    department: 'Engineering',
+    start_date: '2025-03-01',
+  });
+  assert.equal(created.status, 201);
+  const { id: newId } = created.json as { id: number };
+
+  await call('DELETE', `/api/members/${newId}`);
+
+  const csvRes = await callText('GET', '/api/members/export');
+  assert.equal(csvRes.status, 200);
+
+  const lines = csvRes.text.split('\n').filter(l => l.length > 0);
+  const [header, ...dataLines] = lines;
+
+  assert.ok(
+    header.startsWith('id,name,email,role,department,start_date,is_active,deactivation_date'),
+    `CSV header must start with expected columns (got: ${header})`,
+  );
+
+  const deactivatedLine = dataLines.find(l => l.startsWith(`${newId},`));
+  assert.ok(deactivatedLine, 'deactivated member must appear as a row in the CSV export');
+  assert.ok(
+    /,0,\d{4}-\d{2}-\d{2}/.test(deactivatedLine as string),
+    `deactivated row must contain ,0,YYYY-MM-DD (got: ${deactivatedLine})`,
+  );
+
+  const activeLine = dataLines.find(l => l.endsWith(',1,'));
+  assert.ok(activeLine, 'at least one active member row must end with ,1, (is_active=1, empty deactivation_date)');
 });
