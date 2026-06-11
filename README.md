@@ -67,3 +67,7 @@ Please open an issue before submitting a pull request.
 
 For help, open a GitHub issue. (doc update 2026-06-11T13:51:24.256Z)
 
+## Roadmap
+
+Upcoming features are tracked in GitHub issues. (doc update 2026-06-11T13:55:11.646Z)
+
