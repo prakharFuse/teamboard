@@ -70,3 +70,7 @@ Please open an issue before submitting a pull request. (doc update 2026-06-12T05
 ## Notes xticket-A-mqarwsbi
 
 Source ticket for the cross-ticket memory journey. (mqarwsbi)
+
+## Notes xticket-B-mqarwsbi
+
+Consumer ticket for the cross-ticket memory journey. (mqarwsbi)
