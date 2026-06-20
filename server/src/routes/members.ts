@@ -45,6 +45,51 @@ router.post('/', (req: Request, res: Response): void => {
   }
 });
 
+// ============================================================
+// BLOCKED — TWO OPEN QUESTIONS MUST BE ANSWERED BY PEOPLE OPS
+// BEFORE THIS EXPORT ROUTE MAY BE MODIFIED (JRPRAKHARS-16)
+//
+// BLOCKER 1 — Missing authoritative dept_code CSV
+//   The ticket body states: "The fix must validate … against
+//   exactly the codes in the attached file. If the attachment
+//   is missing or outdated, stop and get the current list from
+//   People Ops."  No attachment is present on the ticket.  No
+//   implementation — here or anywhere else — can proceed until
+//   People Ops supplies the current quarter's dept_code ↔
+//   dept_name CSV.
+//
+// BLOCKER 2 — AC#3 directly contradicts the knowledge base
+//   AC#3 (ticket): "CSV export includes a dept_code column."
+//
+//   Knowledge Doc 2 (External systems and integrations):
+//     "BambooHR processes columns by position, not by header
+//      name.  The current column order is:
+//        id, name, email, role, department, start_date, is_active
+//      Do NOT add, remove, or reorder columns without
+//      coordinating with People Ops.  BambooHR rejects CSVs
+//      with unexpected column counts and the import fails
+//      silently (no error email — People Ops discovers it days
+//      later when reports are wrong)."
+//
+//   The export currently emits exactly those 7 columns
+//   (see header string below).  Adding dept_code — whether as
+//   an 8th column or as a replacement for an existing column —
+//   changes either the column count or the value at an existing
+//   position.  Both outcomes are explicitly forbidden by the
+//   knowledge base without prior People Ops coordination.
+//
+//   This is NOT a decision the engineering team can make
+//   unilaterally.  People Ops must confirm ONE of:
+//     (a) dept_code REPLACES the 'department' column at
+//         position 5, and BambooHR is updated to expect codes
+//         there instead of names; OR
+//     (b) a new dept_code column is appended and BambooHR's
+//         import mapping is updated before the CSV changes; OR
+//     (c) some other column-order arrangement they specify.
+//
+//   Until that decision is received, the export is left
+//   unchanged to avoid a silent BambooHR import failure.
+// ============================================================
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
