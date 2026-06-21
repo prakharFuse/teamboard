@@ -83,3 +83,39 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid BambooHR dept_code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-engr-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(
+    res.status,
+    201,
+    `valid BambooHR dept_code ENGR must be accepted with 201 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+  assert.equal(
+    (res.json as { department: string }).department,
+    'ENGR',
+    'response body must echo back the dept_code',
+  );
+});
+
+test('GET /api/members/export returns dept_code column header', async () => {
+  const server = app.listen(0);
+  try {
+    const { port } = (server.address() as AddressInfo);
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200, `export endpoint must return 200 (got ${res.status})`);
+    const body = await res.text();
+    assert.ok(
+      body.startsWith('id,name,email,role,dept_code,start_date,is_active\n'),
+      `CSV header must start with dept_code column (got: ${JSON.stringify(body.split('\n')[0])})`,
+    );
+  } finally {
+    server.close();
+  }
+});
