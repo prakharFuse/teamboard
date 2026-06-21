@@ -108,7 +108,9 @@ test('GET /api/members/export returns dept_code column header', async () => {
   const server = app.listen(0);
   try {
     const { port } = (server.address() as AddressInfo);
-    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    // Use ?v=2 to opt into the new dept_code header; the unversioned endpoint
+    // keeps the legacy "department" header for backward-compat with the HR integration.
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export?v=2`);
     assert.equal(res.status, 200, `export endpoint must return 200 (got ${res.status})`);
     const body = await res.text();
     assert.ok(

@@ -50,10 +50,15 @@ router.post('/', (req: Request, res: Response): void => {
   }
 });
 
+// GET /api/members/export          — legacy header "department" (backward-compat for HR integration)
+// GET /api/members/export?v=2      — new header "dept_code" (BambooHR codes)
 router.get('/export', (req: Request, res: Response): void => {
   const db = getDb();
   const rows = db.prepare('SELECT * FROM members ORDER BY name ASC').all() as unknown as MemberRow[];
-  const header = 'id,name,email,role,dept_code,start_date,is_active';
+  const v2 = req.query['v'] === '2';
+  const header = v2
+    ? 'id,name,email,role,dept_code,start_date,is_active'
+    : 'id,name,email,role,department,start_date,is_active';
   const csv = [header, ...rows.map(r =>
     `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
   )].join('\n');

@@ -29,6 +29,26 @@ export function getDb(): DatabaseSync {
       )
     `);
 
+    // One-time migration: normalise legacy full-name department values to BambooHR codes.
+    // Runs unconditionally on every startup; the WHERE clause makes it a no-op once all
+    // rows already hold valid codes, so performance impact on steady-state is negligible.
+    db.exec(`
+      UPDATE members SET department = CASE department
+        WHEN 'Engineering'     THEN 'ENGR'
+        WHEN 'Eng'             THEN 'ENGR'
+        WHEN 'Product'         THEN 'PROD'
+        WHEN 'Design'          THEN 'DSGN'
+        WHEN 'Human Resources' THEN 'HRES'
+        WHEN 'Finance'         THEN 'FINC'
+        WHEN 'Marketing'       THEN 'MKTG'
+        WHEN 'Sales'           THEN 'SALE'
+        WHEN 'Operations'      THEN 'OPER'
+        WHEN 'Legal'           THEN 'LEGL'
+        ELSE department
+      END
+      WHERE department NOT IN ('ENGR','PROD','DSGN','HRES','FINC','MKTG','SALE','OPER','LEGL')
+    `);
+
     const count = db.prepare('SELECT COUNT(*) as count FROM members').get() as unknown as { count: number };
     if (count.count === 0) {
       // Department codes use BambooHR canonical codes — see ./departments.ts for the authoritative list.
