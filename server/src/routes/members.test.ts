@@ -105,7 +105,7 @@ test('POST /api/members accepts a valid BambooHR dept_code', async () => {
 });
 
 test('GET /api/members/export returns dept_code column header', async () => {
-  const server = app.listen(0);
+  const server = await new Promise<ReturnType<typeof app.listen>>(resolve => { const s = app.listen(0, () => resolve(s)); });
   try {
     const { port } = (server.address() as AddressInfo);
     // Use ?v=2 to opt into the new dept_code header; the unversioned endpoint
