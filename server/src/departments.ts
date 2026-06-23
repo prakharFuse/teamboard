@@ -1,5 +1,5 @@
 // Provenance: ticket TEAM-4 — People Ops confirmation (2026-05-26) supersedes attached CSV.
-// Canonical BambooHR department codes confirmed by Prakhar Srivastav on 2026-05-26.
+// Canonical BambooHR department codes; see TEAM-4 for confirmation history.
 
 export const DEPARTMENTS = [
   { code: 'ENGR', name: 'Engineering' },
