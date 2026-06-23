@@ -52,6 +52,21 @@ async function call(
   }
 }
 
+async function callRaw(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -82,4 +97,63 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+});
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Engr Person',
+    email: `ci-test-engr-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('POST /api/members error message enumerates allowed codes', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Bogus Person',
+    email: `ci-test-bogus-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'BOGUS',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const errorMsg = (res.json as { error: string }).error;
+  assert.ok(
+    errorMsg.includes('ENGR'),
+    `error message should include 'ENGR', got: ${errorMsg}`,
+  );
+  assert.ok(
+    errorMsg.includes('LEGL'),
+    `error message should include 'LEGL', got: ${errorMsg}`,
+  );
+});
+
+test('PATCH /api/members/:id rejects invalid department', async () => {
+  // First POST a valid member with department 'PROD' to get a real id.
+  const postRes = await call('POST', '/api/members', {
+    name: 'Prod Person',
+    email: `ci-test-prod-${Date.now()}@company.com`,
+    role: 'Product Manager',
+    department: 'PROD',
+    start_date: '2024-01-01',
+  });
+  assert.equal(postRes.status, 201);
+  const { id } = postRes.json as { id: number };
+
+  // Then PATCH that member with an invalid department code.
+  const patchRes = await call('PATCH', `/api/members/${id}`, {
+    department: 'NOPE',
+  });
+  assert.equal(patchRes.status, 400);
+});
+
+test('GET /api/members/export emits dept_code and dept_name columns', async () => {
+  const res = await callRaw('GET', '/api/members/export');
+  assert.equal(res.status, 200);
+  const firstLine = res.text.split('\n')[0];
+  assert.equal(firstLine, 'id,name,email,role,dept_code,dept_name,start_date,is_active');
 });
