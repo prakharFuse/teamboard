@@ -25,6 +25,7 @@ function App() {
   const [startDate, setStartDate] = useState('');
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState('');
 
   async function loadMembers(): Promise<void> {
     const res = await fetch('/api/members');
@@ -73,6 +74,11 @@ function App() {
     loadStats();
   }
 
+  const q = search.trim().toLowerCase();
+  const filteredMembers = q
+    ? members.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+    : members;
+
   return (
     <div className="app">
       <header>
@@ -83,7 +89,13 @@ function App() {
       <div className="layout">
         <main>
           <div className="toolbar">
-            <h2>Team Members ({members.length})</h2>
+            <h2>Team Members ({filteredMembers.length})</h2>
+            <input
+              className="search-box"
+              placeholder="Search by name or email"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
             <button onClick={() => setShowForm(!showForm)}>
               {showForm ? 'Cancel' : '+ Add Member'}
             </button>
@@ -117,7 +129,7 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {members.map(m => (
+              {filteredMembers.map(m => (
                 <tr key={m.id}>
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
