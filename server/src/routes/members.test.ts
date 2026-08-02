@@ -52,6 +52,33 @@ async function call(
   }
 }
 
+async function callText(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
+interface Member {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  start_date: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -81,5 +108,72 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     res.status,
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+});
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-${Date.now()}-valid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as Member).department, 'ENGR');
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Invalid Dept Person',
+    email: `ci-test-${Date.now()}-patch-invalid@company.com`,
+    role: 'Engineer',
+    department: 'PROD',
+    start_date: '2024-01-01',
+  });
+  const member = created.json as Member;
+  const res = await call('PATCH', `/api/members/${member.id}`, {
+    department: 'NopeDept',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Valid Dept Person',
+    email: `ci-test-${Date.now()}-patch-valid@company.com`,
+    role: 'Engineer',
+    department: 'PROD',
+    start_date: '2024-01-01',
+  });
+  const member = created.json as Member;
+  const res = await call('PATCH', `/api/members/${member.id}`, {
+    department: 'DSGN',
+  });
+  assert.equal(res.status, 200);
+  assert.equal((res.json as Member).department, 'DSGN');
+});
+
+test('GET /api/members/export includes a dept_code column', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Export Dept Person',
+    email: `ci-test-${Date.now()}-export@company.com`,
+    role: 'Engineer',
+    department: 'MKTG',
+    start_date: '2024-01-01',
+  });
+  const member = created.json as Member;
+  const res = await callText('GET', '/api/members/export');
+  assert.equal(res.status, 200);
+  const lines = res.text.split('\n');
+  assert.equal(
+    lines[0],
+    'id,name,email,role,department,start_date,is_active,dept_code',
+  );
+  const memberLine = lines.find((line) => line.startsWith(`${member.id},`));
+  assert.ok(memberLine, 'exported CSV includes the created member row');
+  assert.ok(
+    (memberLine as string).endsWith(',MKTG'),
+    `expected row to end with ',MKTG' (got: ${memberLine})`,
   );
 });
