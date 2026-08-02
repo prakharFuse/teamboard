@@ -39,7 +39,11 @@ async function call(
 ): Promise<{ status: number; json: unknown }> {
   const server = app.listen(0);
   try {
-    const { port } = server.address() as AddressInfo;
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') {
+      throw new Error('Expected AddressInfo');
+    }
+    const { port } = addr;
     const res = await fetch(`http://127.0.0.1:${port}${path}`, {
       method,
       headers: { 'content-type': 'application/json' },
@@ -149,7 +153,11 @@ test('GET /api/members/export uses dept_code column with canonical codes', async
   const server = app.listen(0);
   let text: string;
   try {
-    const { port } = server.address() as AddressInfo;
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') {
+      throw new Error('Expected AddressInfo');
+    }
+    const { port } = addr;
     const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
     text = await res.text();
   } finally {
