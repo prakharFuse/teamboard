@@ -83,3 +83,82 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Code Person',
+    email: `ci-test-${Date.now()}-valid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const body = res.json as { department: string };
+  assert.equal(body.department, 'ENGR');
+});
+
+test('POST /api/members rejecting an invalid department lists the allowed codes', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}-invalid@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const body = res.json as { error: string };
+  assert.ok(body.error.includes('ENGR'));
+  assert.ok(body.error.includes('LEGL'));
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Invalid Person',
+    email: `ci-test-${Date.now()}-patch-invalid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const { id } = created.json as { id: number };
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Valid Person',
+    email: `ci-test-${Date.now()}-patch-valid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const { id } = created.json as { id: number };
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'PROD',
+  });
+  assert.equal(res.status, 200);
+  const body = res.json as { department: string };
+  assert.equal(body.department, 'PROD');
+});
+
+test('GET /api/members/export uses dept_code column with canonical codes', async () => {
+  const server = app.listen(0);
+  let text: string;
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    text = await res.text();
+  } finally {
+    server.close();
+  }
+  const lines = text.split('\n');
+  assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+  const dataRows = lines.slice(1).filter((line) => line.length > 0);
+  assert.ok(dataRows.length > 0, 'export has at least one data row');
+  const hasEngrRow = dataRows.some((row) => row.split(',')[4] === 'ENGR');
+  assert.ok(hasEngrRow, 'at least one row has a valid dept_code (ENGR)');
+});
