@@ -83,3 +83,29 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a canonical department', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Canonical Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as { department: string }).department, 'Engineering');
+});
+
+test('POST /api/members rejects an invalid department with an error message', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Invalid Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Wizardry',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const error = (res.json as { error: unknown }).error;
+  assert.equal(typeof error, 'string');
+  assert.ok((error as string).length > 0, 'error message must be non-empty');
+});

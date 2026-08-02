@@ -1,6 +1,20 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
 
+const CANONICAL_DEPARTMENTS: readonly string[] = [
+  'Engineering',
+  'Product',
+  'Design',
+  'Marketing',
+  'Sales',
+  'Human Resources',
+  'Finance',
+  'Operations',
+  'Customer Support',
+  'IT',
+];
+const DEPARTMENT_SET = new Set<string>(CANONICAL_DEPARTMENTS);
+
 interface MemberRow {
   id: number;
   name: string;
@@ -27,6 +41,12 @@ router.post('/', (req: Request, res: Response): void => {
   const { name, email, role, department, start_date } = req.body;
   if (!name || !email || !role || !department || !start_date) {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
+    return;
+  }
+  if (!DEPARTMENT_SET.has(department)) {
+    res.status(400).json({
+      error: `Invalid department: '${department}'. Allowed departments: ${CANONICAL_DEPARTMENTS.join(', ')}`,
+    });
     return;
   }
   const db = getDb();
