@@ -15,7 +15,6 @@
  */
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import type { AddressInfo } from 'node:net';
 import express from 'express';
 import membersRouter from './members.js';
 
