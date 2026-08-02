@@ -15,7 +15,6 @@
  */
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import type { AddressInfo } from 'node:net';
 import express from 'express';
 import membersRouter from './members.js';
 import { DEPARTMENT_CODES } from '../departments.js';
@@ -40,7 +39,9 @@ async function call(
 ): Promise<{ status: number; json: unknown }> {
   const server = app.listen(0);
   try {
-    const { port } = server.address() as AddressInfo;
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') throw new Error('Expected AddressInfo');
+    const { port } = addr;
     const res = await fetch(`http://127.0.0.1:${port}${path}`, {
       method,
       headers: { 'content-type': 'application/json' },
@@ -56,7 +57,9 @@ async function call(
 async function callCsv(path: string): Promise<{ status: number; text: string }> {
   const server = app.listen(0);
   try {
-    const { port } = server.address() as AddressInfo;
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') throw new Error('Expected AddressInfo');
+    const { port } = addr;
     const res = await fetch(`http://127.0.0.1:${port}${path}`);
     const text = await res.text();
     return { status: res.status, text };
