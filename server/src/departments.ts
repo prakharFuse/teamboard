@@ -19,7 +19,3 @@ export const DEPT_CODES = Object.keys(DEPARTMENTS) as DeptCode[];
 export function isValidDeptCode(value: unknown): value is DeptCode {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(DEPARTMENTS, value);
 }
-
-export function deptName(code: DeptCode): string {
-  return DEPARTMENTS[code];
-}
