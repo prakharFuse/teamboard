@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import membersRouter from './members.js';
+import { DEPARTMENT_CODES } from '../departments.js';
 
 // Isolated throwaway DB — must be set before the first getDb() call (handlers
 // call getDb() lazily, so setting it here, before any request, is enough).
@@ -82,4 +83,66 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+});
+
+test('POST /api/members accepts a valid department code with 201', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as { department: string }).department, 'ENGR');
+});
+
+test('POST /api/members invalid department error body lists every allowed code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const error = (res.json as { error: string }).error;
+  for (const code of DEPARTMENT_CODES) {
+    assert.ok(error.includes(code), `error message must include allowed code ${code} (got: ${error})`);
+  }
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Target',
+    email: `ci-test-${Date.now()}-patch-invalid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(
+    res.status,
+    400,
+    `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+});
+
+test('PATCH /api/members/:id accepts a valid department code with 200', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Target',
+    email: `ci-test-${Date.now()}-patch-valid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'PROD',
+  });
+  assert.equal(res.status, 200);
+  assert.equal((res.json as { department: string }).department, 'PROD');
 });
