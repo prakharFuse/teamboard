@@ -39,7 +39,9 @@ async function call(
 ): Promise<{ status: number; json: unknown }> {
   const server = app.listen(0);
   try {
-    const { port } = server.address() as AddressInfo;
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') throw new Error('Server not listening');
+    const { port } = addr;
     const res = await fetch(`http://127.0.0.1:${port}${path}`, {
       method,
       headers: { 'content-type': 'application/json' },
@@ -58,7 +60,9 @@ async function callForText(
 ): Promise<{ status: number; text: string }> {
   const server = app.listen(0);
   try {
-    const { port } = server.address() as AddressInfo;
+    const addr = server.address();
+    if (!addr || typeof addr === 'string') throw new Error('Server not listening');
+    const { port } = addr;
     const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
     const text = await res.text();
     return { status: res.status, text };
