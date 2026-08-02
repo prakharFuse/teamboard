@@ -83,3 +83,65 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Department Person',
+    email: `ci-test-valid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('POST rejects invalid department listing allowed codes', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Invalid Department Person',
+    email: `ci-test-invalid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const error = (res.json as { error: string }).error;
+  assert.ok(error.includes('ENGR'), `error should list allowed codes (got: ${error})`);
+});
+
+test('PATCH /api/members/:id rejects an invalid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Prod Person',
+    email: `ci-test-patch-invalid-${Date.now()}@company.com`,
+    role: 'Manager',
+    department: 'PROD',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH accepts a valid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Prod Person Two',
+    email: `ci-test-patch-valid-${Date.now()}@company.com`,
+    role: 'Manager',
+    department: 'PROD',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'DSGN',
+  });
+  assert.equal(res.status, 200);
+  const updated = res.json as { department: string };
+  assert.equal(updated.department, 'DSGN');
+});
