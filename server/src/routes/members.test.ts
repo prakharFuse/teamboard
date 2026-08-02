@@ -88,7 +88,7 @@ test('POST /api/members rejects an invalid department with 400', async () => {
   );
 });
 
-test('POST /api/members accepts a valid department code', async () => {
+test('POST /api/members accepts a valid department code', async (): Promise<void> => {
   const res = await call('POST', '/api/members', {
     name: 'Valid Code Person',
     email: `ci-test-${Date.now()}-valid@company.com`,
@@ -101,7 +101,7 @@ test('POST /api/members accepts a valid department code', async () => {
   assert.equal(body.department, 'ENGR');
 });
 
-test('POST /api/members rejecting an invalid department lists the allowed codes', async () => {
+test('POST /api/members rejecting an invalid department lists the allowed codes', async (): Promise<void> => {
   const res = await call('POST', '/api/members', {
     name: 'Test Person',
     email: `ci-test-${Date.now()}-invalid@company.com`,
@@ -115,7 +115,7 @@ test('POST /api/members rejecting an invalid department lists the allowed codes'
   assert.ok(body.error.includes('LEGL'));
 });
 
-test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+test('PATCH /api/members/:id rejects an invalid department with 400', async (): Promise<void> => {
   const created = await call('POST', '/api/members', {
     name: 'Patch Invalid Person',
     email: `ci-test-${Date.now()}-patch-invalid@company.com`,
@@ -131,7 +131,7 @@ test('PATCH /api/members/:id rejects an invalid department with 400', async () =
   assert.equal(res.status, 400);
 });
 
-test('PATCH /api/members/:id accepts a valid department code', async () => {
+test('PATCH /api/members/:id accepts a valid department code', async (): Promise<void> => {
   const created = await call('POST', '/api/members', {
     name: 'Patch Valid Person',
     email: `ci-test-${Date.now()}-patch-valid@company.com`,
@@ -149,7 +149,7 @@ test('PATCH /api/members/:id accepts a valid department code', async () => {
   assert.equal(body.department, 'PROD');
 });
 
-test('GET /api/members/export uses dept_code column with canonical codes', async () => {
+test('GET /api/members/export uses dept_code column with canonical codes', async (): Promise<void> => {
   const server = app.listen(0);
   let text: string;
   try {
