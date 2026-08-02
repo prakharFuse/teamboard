@@ -52,6 +52,21 @@ async function call(
   }
 }
 
+async function callText(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -82,4 +97,51 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+});
+
+test('POST /api/members accepts a valid department code with 201', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-valid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.strictEqual(member.department, 'ENGR');
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Target Person',
+    email: `ci-test-patch-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const member = created.json as { id: number };
+  const res = await call('PATCH', `/api/members/${member.id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('GET /api/members/export includes a dept_code column', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Export Test Person',
+    email: `ci-test-export-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'PROD',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const res = await callText('GET', '/api/members/export');
+  assert.equal(res.status, 200);
+  const [header, ...rows] = res.text.split('\n');
+  assert.ok(header.split(',').includes('dept_code'), `export header must include dept_code (got: ${header})`);
+  const exportedRow = rows.find(row => row.includes('PROD'));
+  assert.ok(exportedRow, 'export must include a row with the PROD department code');
+  assert.ok(exportedRow!.includes('Product'), `export row must include the Product display name (got: ${exportedRow})`);
 });
