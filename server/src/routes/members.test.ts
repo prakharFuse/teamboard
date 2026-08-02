@@ -83,3 +83,62 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid dept_code and returns 201 with the created member', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as { department: string }).department, 'ENGR');
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Invalid Dept Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id accepts a valid dept_code and returns 200 with the updated member', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Valid Dept Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'PROD',
+  });
+  assert.equal(res.status, 200);
+  assert.equal((res.json as { department: string }).department, 'PROD');
+});
+
+test('GET /api/members/export returns a CSV with a dept_code header column', async () => {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200);
+    const text = await res.text();
+    const firstLine = text.split('\n')[0];
+    assert.equal(firstLine, 'id,name,email,role,dept_code,start_date,is_active');
+  } finally {
+    server.close();
+  }
+});
