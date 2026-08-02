@@ -1,5 +1,26 @@
 import { useState, useEffect } from 'react';
 
+interface Department {
+  code: string;
+  name: string;
+}
+
+const DEPARTMENTS: Department[] = [
+  { code: 'ENGR', name: 'Engineering' },
+  { code: 'PROD', name: 'Product' },
+  { code: 'DSGN', name: 'Design' },
+  { code: 'HRES', name: 'Human Resources' },
+  { code: 'FINC', name: 'Finance' },
+  { code: 'MKTG', name: 'Marketing' },
+  { code: 'SALE', name: 'Sales' },
+  { code: 'OPER', name: 'Operations' },
+  { code: 'LEGL', name: 'Legal' },
+];
+
+function departmentName(code: string): string | undefined {
+  return DEPARTMENTS.find(d => d.code === code)?.name;
+}
+
 interface Member {
   id: number;
   name: string;
@@ -98,7 +119,12 @@ function App() {
               </div>
               <div className="form-row">
                 <input placeholder="Role / title" value={role} onChange={e => setRole(e.target.value)} required />
-                <input placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+                <select value={department} onChange={e => setDepartment(e.target.value)} required>
+                  <option value="" disabled>Department</option>
+                  {DEPARTMENTS.map(d => (
+                    <option key={d.code} value={d.code}>{d.name}</option>
+                  ))}
+                </select>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
               </div>
               <button type="submit">Add Member</button>
@@ -122,7 +148,7 @@ function App() {
                   <td className="name-cell">{m.name}</td>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
-                  <td><span className="dept-badge">{m.department}</span></td>
+                  <td><span className="dept-badge">{departmentName(m.department) ?? m.department}</span></td>
                   <td>{m.start_date}</td>
                   <td>
                     <button className="remove-btn" onClick={() => removeMember(m.id)}>
@@ -143,7 +169,7 @@ function App() {
               <ul className="dept-list">
                 {stats.byDepartment.map(d => (
                   <li key={d.department}>
-                    <span>{d.department}</span>
+                    <span>{departmentName(d.department) ?? d.department}</span>
                     <span className="count">{d.count}</span>
                   </li>
                 ))}
