@@ -143,5 +143,5 @@ test('GET /api/members/export includes a dept_code column', async () => {
   assert.ok(header.split(',').includes('dept_code'), `export header must include dept_code (got: ${header})`);
   const exportedRow = rows.find(row => row.includes('PROD'));
   assert.ok(exportedRow, 'export must include a row with the PROD department code');
-  assert.ok(exportedRow!.includes('Product'), `export row must include the Product display name (got: ${exportedRow})`);
+  assert.ok(exportedRow.includes('Product'), `export row must include the Product display name (got: ${exportedRow})`);
 });
