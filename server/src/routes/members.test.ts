@@ -83,3 +83,60 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts the canonical ENGR code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Erin Gallagher',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('POST /api/members lists allowed codes in the invalid-department error', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const error = (res.json as { error: string }).error;
+  assert.ok(error.includes('ENGR'), `error should list allowed codes (got: ${error})`);
+});
+
+test('PATCH /api/members/:id updates department to a valid code', async () => {
+  const res = await call('PATCH', '/api/members/1', { department: 'MKTG' });
+  assert.equal(res.status, 200);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'MKTG');
+});
+
+test('PATCH /api/members/:id rejects an invalid department code with 400', async () => {
+  const res = await call('PATCH', '/api/members/1', { department: 'ZZZZ' });
+  assert.equal(res.status, 400);
+});
+
+test('GET /api/members/export returns a dept_code CSV with canonical codes', async () => {
+  const server = app.listen(0);
+  let text: string;
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200);
+    text = await res.text();
+  } finally {
+    server.close();
+  }
+  const lines = text.split('\n');
+  assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+  assert.ok(
+    lines.some(line => line.includes(',ENGR,')),
+    'export should include a seeded row with a canonical department code',
+  );
+});
