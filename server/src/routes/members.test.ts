@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import membersRouter from './members.js';
+import { DEPARTMENT_CODES } from '../departments.js';
 
 // Isolated throwaway DB — must be set before the first getDb() call (handlers
 // call getDb() lazily, so setting it here, before any request, is enough).
@@ -52,6 +53,18 @@ async function call(
   }
 }
 
+async function callCsv(path: string): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`);
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -81,5 +94,61 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     res.status,
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+});
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-valid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('POST /api/members lists allowed codes in the error for an invalid department', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Invalid Dept Person',
+    email: `ci-test-invalid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const error = (res.json as { error: string }).error;
+  assert.ok(error.includes('ENGR'), `error should list allowed codes (got: ${error})`);
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const res = await call('PATCH', '/api/members/1', {
+    department: 'NotACode',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const res = await call('PATCH', '/api/members/1', {
+    department: 'PROD',
+  });
+  assert.equal(res.status, 200);
+  const updated = res.json as { department: string };
+  assert.equal(updated.department, 'PROD');
+});
+
+test('GET /api/members/export returns a dept_code CSV column with valid codes', async () => {
+  const res = await callCsv('/api/members/export');
+  assert.equal(res.status, 200);
+  const lines = res.text.split('\n');
+  assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+  const dataRow = lines[1];
+  assert.ok(dataRow, 'export includes at least one data row');
+  const fields = dataRow.split(',');
+  assert.ok(
+    DEPARTMENT_CODES.includes(fields[4]),
+    `5th field should be a valid department code (got: ${fields[4]})`,
   );
 });
