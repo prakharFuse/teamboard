@@ -15,7 +15,3 @@ export const DEPARTMENT_CODES: string[] = Object.keys(DEPARTMENTS);
 export function isValidDepartmentCode(code: string): boolean {
   return Object.prototype.hasOwnProperty.call(DEPARTMENTS, code);
 }
-
-export function departmentName(code: string): string | undefined {
-  return DEPARTMENTS[code];
-}
