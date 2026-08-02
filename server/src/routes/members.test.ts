@@ -52,6 +52,21 @@ async function call(
   }
 }
 
+async function callForText(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -82,4 +97,36 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+});
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-valid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as { department: string }).department, 'ENGR');
+});
+
+test('PATCH /api/members/:id rejects an invalid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Dept Person',
+    email: `ci-test-patch-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'NOPE' });
+  assert.equal(res.status, 400);
+});
+
+test('GET /api/members/export includes a dept_code column', async () => {
+  const res = await callForText('GET', '/api/members/export');
+  const [header] = res.text.split('\n');
+  assert.equal(header, 'id,name,email,role,dept_code,start_date,is_active');
 });
