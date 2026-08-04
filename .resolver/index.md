@@ -4,7 +4,7 @@
 
 - `knowledge/architecture.md` · global · Real request flow between client, server, and SQLite — read when tracing how a request or build actually moves
 - `knowledge/data-model.md` · global · The members table schema — read before adding fields, migrations, or queries
-- `knowledge/gotchas.md` · global · Known intentional red test, seed-data inconsistency, and a CSV escaping bug — read before touching members.ts or its tests
+- `knowledge/gotchas.md` · global · A CSV escaping bug — read before touching members.ts or its tests
 - `knowledge/overview.md` · global · What TeamBoard is and where to look first — read before making any change
 
 ## conventions
