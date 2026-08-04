@@ -1,14 +1,9 @@
 /**
  * Members API contract tests (run by CI via `pnpm test`).
  *
- * These are written test-first against TeamBoard's department rules: the
- * "rejects an invalid department" case is RED on `main` today because
- * `POST /api/members` performs no department validation (see members.ts —
- * it inserts whatever `department` string the caller sends). That failing
- * check is intentional: it gives a PR a real, readable failing CI run so the
- * Fix-CI / Refine-PR flow has a genuine `pr_check` to pick up.
- *
- * Resolving TM-105 (department validation) should make the red test pass.
+ * Covers TeamBoard's BambooHR department-code rules (TEAM-4): POST/PATCH
+ * validate `department` against the People-Ops-confirmed code list, and the
+ * CSV export exposes a `dept_code` column.
  *
  * No test framework dependency — Node's built-in test runner + an ephemeral
  * in-process Express server on an in-memory SQLite DB.
@@ -18,6 +13,7 @@ import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import membersRouter from './members.js';
+import { DEPARTMENT_CODES } from '../departments.js';
 
 // Isolated throwaway DB — must be set before the first getDb() call (handlers
 // call getDb() lazily, so setting it here, before any request, is enough).
@@ -68,8 +64,6 @@ test('GET /api/members lists the seeded active members', async () => {
 });
 
 test('POST /api/members rejects an invalid department with 400', async () => {
-  // RED until TM-105 lands department validation. The API currently accepts
-  // any department string and returns 201, so this assertion fails on main.
   const res = await call('POST', '/api/members', {
     name: 'Test Person',
     email: `ci-test-${Date.now()}@company.com`,
@@ -77,9 +71,74 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     department: 'NotARealDepartment',
     start_date: '2024-01-01',
   });
+  assert.equal(res.status, 400);
   assert.equal(
-    res.status,
-    400,
-    `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+    (res.json as { error: string }).error,
+    "Invalid department code 'NotARealDepartment'. Allowed codes: ENGR, PROD, DSGN, HRES, FINC, MKTG, SALE, OPER, LEGL",
   );
+});
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as { department: string }).department, 'ENGR');
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Person',
+    email: `ci-test-${Date.now()}-patch-ok@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'PROD' });
+  assert.equal(res.status, 200);
+  assert.equal((res.json as { department: string }).department, 'PROD');
+});
+
+test('PATCH /api/members/:id rejects an invalid department code with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Person',
+    email: `ci-test-${Date.now()}-patch-bad@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'NOPE' });
+  assert.equal(res.status, 400);
+  assert.equal(
+    (res.json as { error: string }).error,
+    "Invalid department code 'NOPE'. Allowed codes: ENGR, PROD, DSGN, HRES, FINC, MKTG, SALE, OPER, LEGL",
+  );
+});
+
+test('GET /api/members/export includes a dept_code column', async () => {
+  const server = app.listen(0);
+  let text: string;
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200);
+    text = await res.text();
+  } finally {
+    server.close();
+  }
+  const lines = text.split('\n');
+  assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+  const dataRows = lines.slice(1).filter((line) => line.length > 0);
+  assert.ok(dataRows.length > 0, 'export has at least one data row');
+  const hasValidCode = dataRows.some((line) => {
+    const deptCode = line.split(',')[4];
+    return DEPARTMENT_CODES.includes(deptCode);
+  });
+  assert.ok(hasValidCode, 'at least one row has a valid dept_code');
 });
