@@ -130,12 +130,19 @@ test('GET /api/members/export includes a dept_code column with valid codes', asy
     server.close();
   }
   const rows = text.trim().split('\n');
-  const header = rows[0]!.split(',');
-  assert.equal(header[header.length - 1], 'dept_code');
+  const header = rows[0];
+  if (!header) {
+    throw new Error('export CSV has no header row');
+  }
+  const headerFields = header.split(',');
+  assert.equal(headerFields[headerFields.length - 1], 'dept_code');
   // David Kim's department is untouched by the PATCH tests above, unlike
   // Alice Chen's (member id 1), so it's a stable row to assert against.
   const davidRow = rows.find(row => row.includes('David Kim'));
   assert.ok(davidRow, 'seeded David Kim row is present in export');
-  const fields = davidRow!.split(',');
+  if (!davidRow) {
+    throw new Error('seeded David Kim row is present in export');
+  }
+  const fields = davidRow.split(',');
   assert.equal(fields[fields.length - 1], 'ENGR');
 });
