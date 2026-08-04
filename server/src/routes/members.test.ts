@@ -82,4 +82,60 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+  const error = (res.json as { error: string }).error;
+  assert.ok(
+    error.includes('ENGR'),
+    `error should list allowed codes including ENGR (got: ${error})`,
+  );
+});
+
+test('POST /api/members accepts a valid ENGR department with 201', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const res = await call('PATCH', '/api/members/1', {
+    department: 'NotACode',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id accepts a valid PROD department with 200', async () => {
+  const res = await call('PATCH', '/api/members/1', {
+    department: 'PROD',
+  });
+  assert.equal(res.status, 200);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'PROD');
+});
+
+test('GET /api/members/export includes a dept_code column with valid codes', async () => {
+  const server = app.listen(0);
+  let text: string;
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200);
+    text = await res.text();
+  } finally {
+    server.close();
+  }
+  const rows = text.trim().split('\n');
+  const header = rows[0]!.split(',');
+  assert.equal(header[header.length - 1], 'dept_code');
+  // David Kim's department is untouched by the PATCH tests above, unlike
+  // Alice Chen's (member id 1), so it's a stable row to assert against.
+  const davidRow = rows.find(row => row.includes('David Kim'));
+  assert.ok(davidRow, 'seeded David Kim row is present in export');
+  const fields = davidRow!.split(',');
+  assert.equal(fields[fields.length - 1], 'ENGR');
 });
