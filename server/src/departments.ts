@@ -17,7 +17,7 @@ export function isValidDepartmentCode(code: string): boolean {
 }
 
 export function departmentName(code: string): string {
-  return DEPARTMENTS[code]
+  return DEPARTMENTS[code] ?? code
 }
 
 export function invalidDepartmentError(code: string): string {

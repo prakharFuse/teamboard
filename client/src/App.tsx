@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DEPARTMENTS, departmentName } from './departments';
+import { DEPARTMENTS, departmentName } from './departments.js';
 
 interface Member {
   id: number;
