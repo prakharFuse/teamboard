@@ -82,4 +82,71 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+  const error = (res.json as { error: string }).error;
+  assert.ok(
+    error.includes('ENGR'),
+    `400 error body must list an allowed department code, e.g. ENGR (got ${JSON.stringify(res.json)})`,
+  );
+});
+
+test('POST /api/members accepts a valid department code and returns 201', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Target',
+    email: `ci-test-${Date.now()}-patch-invalid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(
+    res.status,
+    400,
+    `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+});
+
+test('PATCH /api/members/:id accepts a valid department code and updates it', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Target',
+    email: `ci-test-${Date.now()}-patch-valid@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'PROD',
+  });
+  assert.equal(res.status, 200);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'PROD');
+});
+
+test('GET /api/members/export header line uses the dept_code column name', async () => {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    const text = await res.text();
+    const headerLine = text.split('\n')[0];
+    assert.equal(headerLine, 'id,name,email,role,dept_code,start_date,is_active');
+  } finally {
+    server.close();
+  }
 });
