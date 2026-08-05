@@ -153,8 +153,10 @@ test('GET /api/members/export returns a dept_code CSV header and coded rows', as
     assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
     const aliceLine = lines.find((line) => line.includes('alice.chen@company.com'));
     assert.ok(aliceLine, 'seeded row for Alice Chen is present');
-    assert.ok(aliceLine!.includes('ENGR'), 'row uses the ENGR department code');
-    assert.ok(!aliceLine!.includes('Engineering'), 'row does not use the free-text department name');
+    if (aliceLine) {
+      assert.ok(aliceLine.includes('ENGR'), 'row uses the ENGR department code');
+      assert.ok(!aliceLine.includes('Engineering'), 'row does not use the free-text department name');
+    }
   } finally {
     server.close();
   }
