@@ -83,3 +83,79 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Person',
+    email: `ci-test-valid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  assert.equal((res.json as { department: string }).department, 'ENGR');
+});
+
+test('POST /api/members rejects an invalid department code with a precise error message', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Test Person',
+    email: `ci-test-invalid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  assert.equal(
+    (res.json as { error: string }).error,
+    "Invalid department code 'NotARealDepartment'. Allowed codes: ENGR, PROD, DSGN, HRES, FINC, MKTG, SALE, OPER, LEGL",
+  );
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Person',
+    email: `ci-test-patch-valid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'PROD' });
+  assert.equal(res.status, 200);
+  assert.equal((res.json as { department: string }).department, 'PROD');
+});
+
+test('PATCH /api/members/:id rejects an invalid department code with a precise error message', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Person Invalid',
+    email: `ci-test-patch-invalid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  const id = (created.json as { id: number }).id;
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'BOGUS' });
+  assert.equal(res.status, 400);
+  assert.equal(
+    (res.json as { error: string }).error,
+    "Invalid department code 'BOGUS'. Allowed codes: ENGR, PROD, DSGN, HRES, FINC, MKTG, SALE, OPER, LEGL",
+  );
+});
+
+test('GET /api/members/export returns a dept_code CSV header and coded rows', async () => {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200);
+    const text = await res.text();
+    const lines = text.split('\n');
+    assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+    const aliceLine = lines.find((line) => line.includes('alice.chen@company.com'));
+    assert.ok(aliceLine, 'seeded row for Alice Chen is present');
+    assert.ok(aliceLine!.includes('ENGR'), 'row uses the ENGR department code');
+    assert.ok(!aliceLine!.includes('Engineering'), 'row does not use the free-text department name');
+  } finally {
+    server.close();
+  }
+});
