@@ -3,10 +3,9 @@ name: gotchas
 description: Non-obvious runtime traps in TeamBoard's server — DB singleton timing, hard-delete, unescaped CSV
 type: knowledge
 scope: global
-updated: '2026-08-11'
-captured_sha: 3829eea37ba432ad6350c950990797e1623c05c5
+updated: 2026-08-11 (IONE-959)
+captured_sha: 0ca953b5d56b1cc59be278da87215d33f0f64792
 sources:
-  - server/src/db.ts
   - server/src/routes/members.ts
   - server/src/routes/members.test.ts
 ---
@@ -15,9 +14,9 @@ sources:
 
 `getDb()` (`server/src/db.ts:11-48`) memoizes the `DatabaseSync` instance in a module-level `let db`. Setting `process.env.TEAMBOARD_DB_PATH` after any handler has already run does nothing — the path is read once, on first construction. `members.test.ts:24` sets it to `:memory:` at module load time, before the router is even imported, which is why it works there. If you add a second test file that imports `members.js` without setting the env var first, it'll fall through to the real `data/team.db` default.
 
-## `DELETE /api/members/:id` is a hard delete despite the `is_active` column
+## `DELETE /api/members/:id` soft-deletes and prefixes the email
 
-See [[data-model]] — `is_active` is filtered on read but never written to `0` anywhere. Don't build a "restore deleted member" feature assuming soft-delete semantics; the row is actually gone.
+`members.ts:106-121` no longer does a hard `DELETE FROM members`. It sets `is_active = 0` and rewrites `email` to `deactivated-<original email>` (unless already prefixed) so the address is freed up for Okta SSO revocation while the row — and its unique-email history — is retained. See [[data-model]]. Two consequences worth knowing: (1) the delete is idempotent — a second `DELETE` on the same id checks `startsWith('deactivated-')` and does not double-prefix; (2) since the original email is mutated, a caller can `POST` a *new* member with the same original email right after deleting the old one without hitting the `UNIQUE` constraint.
 
 ## CSV export does not escape fields
 
