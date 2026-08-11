@@ -83,3 +83,88 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Department Person',
+    email: `valid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('POST /api/members rejects a garbage department code with an exact error message', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Garbage Department Person',
+    email: `garbage-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'NotARealDepartment',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const body = res.json as { error: string };
+  assert.equal(
+    body.error,
+    "Invalid department code 'NotARealDepartment'. Allowed codes: ENGR, PROD, DSGN, HRES, FINC, MKTG, SALE, OPER, LEGL",
+  );
+});
+
+test('POST /api/members rejects a display name instead of a department code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Display Name Person',
+    email: `display-name-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id rejects an invalid department and does not change the stored value', async () => {
+  const listRes = await call('GET', '/api/members');
+  const seeded = (listRes.json as { members: { id: number; email: string; department: string }[] }).members.find(
+    (m) => m.email === 'alice.chen@company.com',
+  );
+  assert.ok(seeded, 'seeded member alice.chen@company.com must exist');
+  const res = await call('PATCH', `/api/members/${seeded.id}`, { department: 'INVALID' });
+  assert.equal(res.status, 400);
+  const afterRes = await call('GET', `/api/members/${seeded.id}`);
+  const after = afterRes.json as { department: string };
+  assert.equal(after.department, seeded.department);
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const listRes = await call('GET', '/api/members');
+  const seeded = (listRes.json as { members: { id: number; email: string }[] }).members.find(
+    (m) => m.email === 'alice.chen@company.com',
+  );
+  assert.ok(seeded, 'seeded member alice.chen@company.com must exist');
+  const res = await call('PATCH', `/api/members/${seeded.id}`, { department: 'DSGN' });
+  assert.equal(res.status, 200);
+  const updated = res.json as { department: string };
+  assert.equal(updated.department, 'DSGN');
+});
+
+test('GET /api/members/export returns a header row and code-valued dept_code data', async () => {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    assert.equal(res.status, 200);
+    const csv = await res.text();
+    const lines = csv.split('\n');
+    assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+    const allowedCodes = ['ENGR', 'PROD', 'DSGN', 'HRES', 'FINC', 'MKTG', 'SALE', 'OPER', 'LEGL'];
+    const dataRows = lines.slice(1).filter((line) => line.length > 0);
+    assert.ok(
+      dataRows.some((row) => allowedCodes.includes(row.split(',')[4])),
+      'at least one row has a dept_code from the allowed set',
+    );
+  } finally {
+    server.close();
+  }
+});
