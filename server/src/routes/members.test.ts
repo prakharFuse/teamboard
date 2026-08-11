@@ -67,6 +67,38 @@ test('GET /api/members lists the seeded active members', async () => {
   assert.ok(members.length > 0, 'seed data is present');
 });
 
+test('GET /api/members/count returns { count } matching the active member list length', async () => {
+  const listRes = await call('GET', '/api/members');
+  assert.equal(listRes.status, 200);
+  const members = (listRes.json as { members: unknown[] }).members;
+
+  const countRes = await call('GET', '/api/members/count');
+  assert.equal(countRes.status, 200);
+  const { count } = countRes.json as { count: number };
+  assert.equal(typeof count, 'number');
+  assert.equal(count, members.length);
+});
+
+test('GET /api/members/count increases by exactly one after adding an active member', async () => {
+  const before = await call('GET', '/api/members/count');
+  assert.equal(before.status, 200);
+  const beforeCount = (before.json as { count: number }).count;
+
+  const createRes = await call('POST', '/api/members', {
+    name: 'Count Test Person',
+    email: `count-test-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(createRes.status, 201);
+
+  const after = await call('GET', '/api/members/count');
+  assert.equal(after.status, 200);
+  const afterCount = (after.json as { count: number }).count;
+  assert.equal(afterCount, beforeCount + 1);
+});
+
 test('POST /api/members rejects an invalid department with 400', async () => {
   // RED until TM-105 lands department validation. The API currently accepts
   // any department string and returns 201, so this assertion fails on main.
