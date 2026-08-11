@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import membersRouter from './members.js';
+import { DEPARTMENT_CODES } from '../departments.js';
 
 // Isolated throwaway DB — must be set before the first getDb() call (handlers
 // call getDb() lazily, so setting it here, before any request, is enough).
@@ -81,5 +82,82 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     res.status,
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+});
+
+test('POST /api/members accepts a valid dept_code', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Dept Person',
+    email: `ci-test-valid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 201);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'ENGR');
+});
+
+test('POST /api/members rejects an invalid dept_code with a listed-codes error', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Display Name Person',
+    email: `ci-test-display-name-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(res.status, 400);
+  const { error } = res.json as { error: string };
+  assert.ok(error.includes('ENGR'), `error must list allowed codes (got: ${error})`);
+});
+
+test('PATCH /api/members/:id rejects an invalid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Invalid Person',
+    email: `ci-test-patch-invalid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const { id } = created.json as { id: number };
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'BOGUS' });
+  assert.equal(res.status, 400);
+});
+
+test('PATCH /api/members/:id accepts a valid department code', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Valid Person',
+    email: `ci-test-patch-valid-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'ENGR',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const { id } = created.json as { id: number };
+  const res = await call('PATCH', `/api/members/${id}`, { department: 'PROD' });
+  assert.equal(res.status, 200);
+  const member = res.json as { department: string };
+  assert.equal(member.department, 'PROD');
+});
+
+test('GET /api/members/export emits a dept_code column', async () => {
+  const server = app.listen(0);
+  let text: string;
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
+    text = await res.text();
+  } finally {
+    server.close();
+  }
+  const lines = text.split('\n');
+  assert.equal(lines[0], 'id,name,email,role,dept_code,start_date,is_active');
+  assert.ok(lines.length > 1, 'export has at least one data row');
+  const fields = lines[1].split(',');
+  const deptCode = fields[4];
+  assert.ok(
+    DEPARTMENT_CODES.includes(deptCode),
+    `5th field must be a valid dept_code (got: ${deptCode})`,
   );
 });
