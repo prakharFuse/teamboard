@@ -83,3 +83,56 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('DELETE /api/members/:id soft-deletes: removed from the active directory', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Soft Delete Person',
+    email: `soft-delete-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const deleted = await call('DELETE', `/api/members/${id}`);
+  assert.equal(deleted.status, 200);
+  assert.deepEqual(deleted.json, { success: true });
+
+  const list = await call('GET', '/api/members');
+  const members = (list.json as { members: { id: number }[] }).members;
+  assert.ok(
+    !members.some(m => m.id === id),
+    'deleted member must not appear in the active directory',
+  );
+});
+
+test('DELETE /api/members/:id retains the record instead of erasing it', async () => {
+  const original = {
+    name: 'Retained Person',
+    email: `retained-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  };
+  const created = await call('POST', '/api/members', original);
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  await call('DELETE', `/api/members/${id}`);
+
+  const fetched = await call('GET', `/api/members/${id}`);
+  assert.equal(fetched.status, 200);
+  const member = fetched.json as {
+    is_active: number;
+    name: string;
+    role: string;
+    department: string;
+    start_date: string;
+  };
+  assert.equal(member.is_active, 0);
+  assert.equal(member.name, original.name);
+  assert.equal(member.role, original.role);
+  assert.equal(member.department, original.department);
+  assert.equal(member.start_date, original.start_date);
+});
