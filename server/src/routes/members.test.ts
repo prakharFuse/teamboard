@@ -128,7 +128,8 @@ test('PATCH /api/members/:id rejects an invalid department and does not change t
   const listRes = await call('GET', '/api/members');
   const seeded = (listRes.json as { members: { id: number; email: string; department: string }[] }).members.find(
     (m) => m.email === 'alice.chen@company.com',
-  )!;
+  );
+  assert.ok(seeded, 'seeded member alice.chen@company.com must exist');
   const res = await call('PATCH', `/api/members/${seeded.id}`, { department: 'INVALID' });
   assert.equal(res.status, 400);
   const afterRes = await call('GET', `/api/members/${seeded.id}`);
@@ -140,7 +141,8 @@ test('PATCH /api/members/:id accepts a valid department code', async () => {
   const listRes = await call('GET', '/api/members');
   const seeded = (listRes.json as { members: { id: number; email: string }[] }).members.find(
     (m) => m.email === 'alice.chen@company.com',
-  )!;
+  );
+  assert.ok(seeded, 'seeded member alice.chen@company.com must exist');
   const res = await call('PATCH', `/api/members/${seeded.id}`, { department: 'DSGN' });
   assert.equal(res.status, 200);
   const updated = res.json as { department: string };
