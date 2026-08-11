@@ -35,10 +35,5 @@
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.46.4",
     "vite": "^6.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "path-to-regexp": "0.1.13"
-    }
   }
 }
