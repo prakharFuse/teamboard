@@ -3,11 +3,10 @@ name: gotchas
 description: Known intentional-failure state (TM-105) and other surprises before touching members.ts or its tests
 type: knowledge
 scope: global
-updated: '2026-08-11'
-captured_sha: 3829eea37ba432ad6350c950990797e1623c05c5
+updated: 2026-08-11 (IONE-959)
+captured_sha: b1f47deb58b2da511839163e1b920acbe54c8089
 sources:
-  - server/src/routes/members.test.ts
-  - server/src/routes/members.ts
+  - package.json
 ---
 
 ## TM-105: the department-validation test is intentionally red
@@ -34,3 +33,8 @@ not loosening or deleting the test. If asked to add unrelated features to
   `NaN`, and the `SELECT ... WHERE id = ?` lookup then just misses, so the
   API returns a plain 404 rather than a 400. Not a bug to "fix" incidentally,
   but don't assume a 400 exists for malformed IDs.
+- `package.json` has a `pnpm.overrides` entry pinning `path-to-regexp` to
+  `0.1.13` — this forces the version pulled in transitively by `express`
+  4.x, fixing GHSA-37ch-88jc-xwx2 (ReDoS). Don't remove this override when
+  bumping `express` or its deps unless the transitive `path-to-regexp`
+  version is confirmed patched upstream.
