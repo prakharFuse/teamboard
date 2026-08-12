@@ -99,3 +99,24 @@ test('POST /api/members accepts a valid department with 201', async () => {
   );
   assert.equal((res.json as { department: string }).department, 'Engineering');
 });
+
+test('PATCH /api/members/:id rejects an invalid department with 400', async () => {
+  const createRes = await call('POST', '/api/members', {
+    name: 'Patch Department Person',
+    email: `ci-test-patch-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Design',
+    start_date: '2024-01-01',
+  });
+  assert.equal(createRes.status, 201);
+  const { id } = createRes.json as { id: number };
+
+  const res = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(
+    res.status,
+    400,
+    `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+});
