@@ -4,11 +4,10 @@ description: How server tests are structured (no framework, in-memory SQLite, ep
 type: convention
 scope:
   - server/src/**/*.test.ts
-updated: '2026-08-12'
-captured_sha: 3829eea37ba432ad6350c950990797e1623c05c5
+updated: 2026-08-12 (IONE-959)
+captured_sha: 1200413d009895f880bb480e9b74194c0f6b3934
 sources:
   - server/src/routes/members.test.ts
-  - package.json
 ---
 
 Server tests use Node's built-in test runner (`node:test` + `node:assert/strict`)
@@ -26,7 +25,8 @@ Pattern to follow for new route tests (`members.test.ts`):
   see the `call()` helper. Reuse this helper rather than adding a new HTTP
   client pattern.
 
-Don't touch the "rejects an invalid department with 400" test to make CI
-green — it's intentionally red pending TM-105 (see `[[overview]]`). If you're
-asked to make server tests pass, implement the missing department validation
-in `members.ts` instead of weakening the assertion.
+TM-105 (department validation) has landed — all department tests, including
+the formerly-red "rejects an invalid department with 400" case, pass on `HEAD`
+now (see `[[overview]]`). There's no deliberately-red test in this suite
+anymore; if you introduce one for a future ticket, comment it as clearly as
+this one was so it isn't mistaken for a flake.
