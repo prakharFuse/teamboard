@@ -83,3 +83,19 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('POST /api/members accepts a valid department with 201', async () => {
+  const res = await call('POST', '/api/members', {
+    name: 'Valid Department Person',
+    email: `ci-test-valid-dept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(
+    res.status,
+    201,
+    `valid department must be accepted with 201 (got ${res.status}: ${JSON.stringify(res.json)})`,
+  );
+  assert.equal((res.json as { department: string }).department, 'Engineering');
+});
