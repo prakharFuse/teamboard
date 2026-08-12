@@ -3,13 +3,11 @@ name: overview
 description: What TeamBoard is and where the real gaps are beyond CLAUDE.md/README
 type: knowledge
 scope: global
-updated: 2026-08-12
-captured_sha: HEAD
+updated: 2026-08-12 (IONE-959)
+captured_sha: 18b1194567ac04eac17a111d2c9e4f49e2375ef8
 sources:
-  - CLAUDE.md
-  - README.md
-  - server/src/db.ts
-  - server/src/routes/members.ts
+  - package.json
+  - pnpm-lock.yaml
 ---
 
 TeamBoard's stack, layout, commands, and endpoint list are accurately documented in
@@ -33,3 +31,11 @@ be rejected.
 first call to `getDb()` — from any route handler — decides which file the process talks
 to for its whole lifetime. Tests rely on this: `TEAMBOARD_DB_PATH` must be set to
 `':memory:'` before the first request hits any route (`server/src/routes/members.test.ts:24`).
+
+## `path-to-regexp` is pinned via pnpm override
+
+`package.json`'s `pnpm.overrides` forces `path-to-regexp` to `0.1.13` regardless of what
+`express` (a transitive dependency of it) requests, to remediate GHSA-37ch-88jc-xwx2 (ReDoS).
+Updating `express` or removing the override without checking the transitive resolution can
+silently reintroduce the vulnerable version — verify `pnpm-lock.yaml` still resolves
+`path-to-regexp` to `0.1.13` after any dependency bump.

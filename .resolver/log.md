@@ -1,0 +1,1 @@
+79cd43ed-dbb1-4a40-9fdf-cf15a2ad25ad: add-fact to knowledge/overview.md — documented pnpm override pinning path-to-regexp to 0.1.13 (GHSA-37ch-88jc-xwx2 ReDoS fix), a gotcha for future dependency bumps
