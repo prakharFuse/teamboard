@@ -4,7 +4,7 @@ description: Team claude-md rules from CLAUDE.md
 type: convention
 scope: global
 updated: '2026-08-21'
-captured_sha: 3829eea37ba432ad6350c950990797e1623c05c5
+captured_sha: 723fa66f9637d236acd5978440466789d18b0101
 sources:
   - CLAUDE.md
 ---
@@ -42,3 +42,7 @@ TeamBoard — internal team directory. Express + React + SQLite.
 - API errors: `{ "error": string }` with appropriate HTTP status
 - Prefer parameterized SQL (`?` placeholders) — no string concatenation
 - SQLite via Node built-in `node:sqlite` (`DatabaseSync`), requires Node >= 22.5
+
+## Config
+- All tunable values (port, host, dbPath, csvFilename) live in `server/src/config.ts`, the single source of truth
+- Override at runtime with `TEAMBOARD_*` env vars (e.g. `TEAMBOARD_PORT`); see README.md "Configuration" for the full table and how to add a value

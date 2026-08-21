@@ -12,3 +12,5 @@
   run, `:memory:` DB isolation timing).
 - No genuine divergences found between the user docs and the code — only gaps
   the docs don't cover, so no `## Divergences` sections were needed.
+18b4ac4a-d73e-4dc1-8292-04f011f49b7d: corrected knowledge/overview.md — ports are now configurable via server/src/config.ts + client/vite.config.ts env-var mirroring, not hardcoded
+18b4ac4a-d73e-4dc1-8292-04f011f49b7d: added fact to knowledge/architecture.md — new server/src/config.ts centralizes runtime config; client/vite.config.ts duplicates its port logic since it can't import the TS module

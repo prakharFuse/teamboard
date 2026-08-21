@@ -4,33 +4,23 @@ description: Real component shape of TeamBoard (client, server, DB) and how they
 type: knowledge
 scope: global
 updated: 2026-08-21 (IONE-959)
-captured_sha: 3829eea37ba432ad6350c950990797e1623c05c5
+captured_sha: 723fa66f9637d236acd5978440466789d18b0101
 sources:
-  - package.json
+  - server/src/config.ts
   - client/vite.config.ts
   - server/src/index.ts
-  - server/src/routes/members.ts
   - server/src/db.ts
 sources_sha256:
-  client/vite.config.ts: 8ce4f4d02ae0440e227419fbeca975395f8a11f6939d20e40f207deb3b6667e6
-  package.json: 18a1323a5738fdea35d5d336cb3b3cdf79a1b76ae97ca8886052d844d2e63551
-  server/src/db.ts: 242c5f190499d9e88e7f019c245b6a61ad9903357bb5e9a92ebc091ddad894ce
-  server/src/index.ts: 6c2c286cd087d1bbf54d47cbab8b0ee3aa1e86795a2a1a615588e18f9541762b
-  server/src/routes/members.ts: 6586b863330c5cbd58a48dd778b13bcd6f62eb660f776d5cc0344c3ccc672f37
+  client/vite.config.ts: 161f50bdb33c686ffa9de457ad3911f96ea0c67ca9e80362b6691df838b4593a
+  server/src/config.ts: 134913d7745e8144ee89b2f751247450742b24d7710f42a43ae4420c99b30c68
+  server/src/db.ts: f202876296b6d7722a69d08416fe1c9f2a18ce4a3d06dc2ce60299a0d48ef340
+  server/src/index.ts: 8bf1866cdb94244360f9786673869c67dedf3b93aa2c05dbe8aa6b908cb871b5
 ---
 
-```mermaid
-flowchart LR
-  Browser -->|fetch /api/*| ViteDevServer["Vite dev server (:5173)\nclient/src/App.tsx"]
-  ViteDevServer -->|proxy /api| ExpressApp["Express app (:4060)\nserver/src/index.ts"]
-  ExpressApp --> MembersRouter["membersRouter\nserver/src/routes/members.ts"]
-  MembersRouter --> SQLite["node:sqlite DatabaseSync\ndata/team.db\nserver/src/db.ts"]
-```
-
-- Single-page React app with no client-side router or state library — all
-  state lives in `App.tsx`'s `useState`/`useEffect` hooks.
-- `membersRouter` is mounted once, at `/api/members` (`server/src/index.ts:11`);
-  there is no other router or module in the server.
-- `getDb()` (`server/src/db.ts`) is a lazy singleton — the first caller in the
-  process creates the file (or `:memory:` DB) and seeds it; every route
-  handler shares that one connection.
+- `server/src/config.ts` is the single source of typed runtime config (port,
+  host, dbPath, csvFilename), exposed as lazy `get` accessors so env-var
+  overrides applied after import still take effect; `index.ts`, `db.ts`, and
+  `members.ts` all import it. `client/vite.config.ts` can't import this TS
+  module (it runs standalone under Vite/Node), so it duplicates the same
+  port-resolution logic by hand — keep both in sync when changing the
+  `TEAMBOARD_*` env var scheme.
