@@ -1,19 +1,22 @@
 import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
-
-// Default to a file under data/. Tests set TEAMBOARD_DB_PATH=':memory:' for an
-// isolated, throwaway database so they never touch the dev file.
-const DB_PATH = process.env.TEAMBOARD_DB_PATH ?? path.join(process.cwd(), 'data', 'team.db');
+import { config } from './config.js';
 
 let db: DatabaseSync;
 
 export function getDb(): DatabaseSync {
   if (!db) {
-    if (DB_PATH !== ':memory:') {
-      fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    // Read config.dbPath here (not at module load) so tests that set
+    // TEAMBOARD_DB_PATH=':memory:' after importing this module still take
+    // effect, since getDb() runs lazily on first use.
+    const dbPath = config.dbPath;
+    // ':memory:' is SQLite's dedicated in-memory sentinel, not a real path —
+    // skip mkdir for it so tests never touch the filesystem.
+    if (dbPath !== ':memory:') {
+      fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     }
-    db = new DatabaseSync(DB_PATH);
+    db = new DatabaseSync(dbPath);
 
     db.exec(`
       CREATE TABLE IF NOT EXISTS members (
