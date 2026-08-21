@@ -1,31 +1,12 @@
-# CLAUDE.md
+# Code Review Rules
 
-## Project
-TeamBoard — internal team directory. Express + React + SQLite.
+## Mandatory artifacts (review-enforced)
 
-## Layout
-- `server/src/` — Express API (TypeScript, compiled to `dist/`)
-- `client/src/` — React UI (Vite)
-- `data/` — SQLite database (gitignored)
+- **Every PR MUST add an entry to `RELEASE_NOTES.md`**: add a single
+  bullet under the `## Unreleased` heading describing the change. A PR
+  that does not modify `RELEASE_NOTES.md` must be REJECTED on review —
+  cite `RELEASE_NOTES.md` as the file to fix.
 
-## Commands
-- `pnpm install` — install dependencies
-- `pnpm dev` — run server + client concurrently
-- `pnpm build` — compile server TypeScript
-- `pnpm typecheck` — type-check both server and client
-- `pnpm lint` — ESLint over server and client (flat config, `eslint.config.mjs`)
-- `pnpm test` — build, then run server tests via the Node test runner
-
-## Endpoints
-- GET /api/members — list active members
-- POST /api/members — create member (name, email, role, department, start_date)
-- GET /api/members/:id — get member by ID
-- PATCH /api/members/:id — update member fields
-- DELETE /api/members/:id — remove member
-- GET /api/members/export — CSV export (HR integration)
-- GET /api/members/stats — team statistics by department
-
-## Rules
-- API errors: `{ "error": string }` with appropriate HTTP status
-- Prefer parameterized SQL (`?` placeholders) — no string concatenation
-- SQLite via Node built-in `node:sqlite` (`DatabaseSync`), requires Node >= 22.5
+*(Planted by j06.2 to force a deterministic iteration-1 rejection. The
+file is pre-created below so the edit-only fixer can append to it rather
+than create it. Both removed in test cleanup.)*
