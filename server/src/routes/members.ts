@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { config } from '../config.js';
 
 interface MemberRow {
   id: number;
@@ -53,7 +54,7 @@ router.get('/export', (req: Request, res: Response): void => {
     `${r.id},${r.name},${r.email},${r.role},${r.department},${r.start_date},${r.is_active}`
   )].join('\n');
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
+  res.setHeader('Content-Disposition', `attachment; filename="${config.csvFilename}"`);
   res.send(csv);
 });
 

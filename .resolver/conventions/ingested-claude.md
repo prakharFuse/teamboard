@@ -1,3 +1,16 @@
+---
+name: CLAUDE
+description: Team claude-md rules from CLAUDE.md
+type: convention
+scope: global
+updated: '2026-08-21'
+captured_sha: 723fa66f9637d236acd5978440466789d18b0101
+sources:
+  - CLAUDE.md
+---
+
+> Ingested verbatim from `CLAUDE.md` — the user-owned source of truth. Edit that file, not this page; this page is re-derived when the source changes.
+
 # CLAUDE.md
 
 ## Project
