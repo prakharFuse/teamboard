@@ -58,3 +58,7 @@ SQLite file at `data/team.db`, auto-created on first run with sample data (8 tea
 | `pnpm build` | Compile server TypeScript |
 | `pnpm typecheck` | Type-check both server and client |
 | `pnpm start` | Run compiled server only |
+
+## Notes
+
+- code-review canary
