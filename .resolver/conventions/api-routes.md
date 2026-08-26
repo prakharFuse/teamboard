@@ -5,14 +5,13 @@ type: convention
 scope:
   - server/src/routes/**
 updated: 2026-08-26 (IONE-959)
-captured_sha: 515477ad05c7788f020fac514c42e6ce60492008
+captured_sha: feebfb6d48ce5584a4e5e74853fd1807ca499b57
 sources:
   - server/src/routes/members.ts
+  - server/src/slack.ts
 sources_sha256:
-  server/src/routes/members.ts: 6586b863330c5cbd58a48dd778b13bcd6f62eb660f776d5cc0344c3ccc672f37
+  server/src/routes/members.ts: dff4bbd5a915fd18f1a81a8bbda196797ec01112fc7dc33b111c3f66a82fa35f
+  server/src/slack.ts: 4f77d9556ce2dca3cb42ef9fb357b366bd4ddc8be59e8cfa9be98af09245c843
 ---
 
-- Validation failures return `res.status(400).json({ error: '<message>' })` then an explicit `return;` (never `return res.json(...)` — handlers are typed `void`). Follow this shape for new required-field or format checks rather than throwing.
-- Uniqueness violations (email) are caught by checking `err.message.includes('UNIQUE')` after the insert throws, then mapped to `409` (`members.ts:39-44`). Any other error is rethrown (`throw err;`) rather than swallowed — don't add a catch-all here.
-- Partial updates use `COALESCE(?, column)` with `field ?? null` args (`members.ts:93-101`) so omitted body fields keep their current DB value. Extend this pattern for any new patchable column rather than building the SQL string dynamically.
-- Not-found lookups follow the same shape everywhere: `SELECT ... WHERE id = ?`, then `if (!row) { res.status(404).json({ error: '... not found' }); return; }` before doing anything else with the row.
+Non-uniqueness errors in `POST /api/members` fire a Slack notification via `void notifyFailure({ operation, error })` (`server/src/slack.ts`) immediately before `throw err;` (`members.ts:45-46`) — the call is fire-and-forget (not awaited) and never swallows or replaces the original error being rethrown. Follow this call-then-rethrow, don't-await pattern if wiring `notifyFailure` into other routes.

@@ -5,17 +5,11 @@ type: convention
 scope:
   - server/**
 updated: 2026-08-26 (IONE-959)
-captured_sha: 515477ad05c7788f020fac514c42e6ce60492008
+captured_sha: feebfb6d48ce5584a4e5e74853fd1807ca499b57
 sources:
-  - server/src/routes/members.test.ts
-  - package.json
+  - server/src/slack.test.ts
 sources_sha256:
-  package.json: 18a1323a5738fdea35d5d336cb3b3cdf79a1b76ae97ca8886052d844d2e63551
-  server/src/routes/members.test.ts: bee34fee976eede5a69b4a7b8423a5c9aa29bd49b21bd5001f427e7ff7c59efa
+  server/src/slack.test.ts: db56cdbc9a43bc52167e4891f4b3a35ebff3d188a80f023f1749403b5881a55b
 ---
 
-- No test framework dependency — use Node's built-in `node:test` and `node:assert/strict`, matching `server/src/routes/members.test.ts`.
-- Set `process.env.TEAMBOARD_DB_PATH = ':memory:'` at module load, before any route handler runs. `getDb()` (`server/src/db.ts:11`) is a lazy singleton read once per process — setting the env var after the first `getDb()` call has no effect.
-- Spin up an ephemeral in-process server per request via `app.listen(0)` and read the assigned port from `server.address()`; close it in a `finally`. See `makeApp()`/`call()` in `members.test.ts:26-53` for the pattern to follow for new route tests.
-- Tests run against **compiled JS** (`dist/server/**/*.test.js`), not source — `pnpm test` always builds first. Don't run `node --test` directly against source or stale `dist/` output.
-- `POST /api/members rejects an invalid department with 400` is deliberately RED on `main` pending TM-105 (see [[overview]]). Don't delete, skip, or loosen this test to make CI green — the fix belongs in `members.ts`'s validation logic, not the test.
+Modules with no DB/HTTP dependency (e.g. `server/src/slack.ts`) are unit-tested by stubbing `globalThis.fetch` directly and restoring it (plus `process.env.SLACK_WEBHOOK_URL`) in a `finally` block — see `slack.test.ts`. This is separate from the `app.listen(0)`/`makeApp()` pattern used for route tests; use whichever fits the module under test.
