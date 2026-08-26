@@ -4,19 +4,17 @@ description: Real request/data flow between client, server, and SQLite — read 
 type: knowledge
 scope: global
 updated: 2026-08-26 (IONE-959)
-captured_sha: 515477ad05c7788f020fac514c42e6ce60492008
+captured_sha: 40c1af055214b8aac31e85217138b2f00e468ff5
 sources:
   - client/vite.config.ts
-  - server/src/index.ts
-  - server/src/routes/members.ts
+  - server/src/config.ts
   - server/src/db.ts
-  - server/src/routes/members.test.ts
+  - server/src/index.ts
 sources_sha256:
-  client/vite.config.ts: 8ce4f4d02ae0440e227419fbeca975395f8a11f6939d20e40f207deb3b6667e6
-  server/src/db.ts: 242c5f190499d9e88e7f019c245b6a61ad9903357bb5e9a92ebc091ddad894ce
-  server/src/index.ts: 6c2c286cd087d1bbf54d47cbab8b0ee3aa1e86795a2a1a615588e18f9541762b
-  server/src/routes/members.test.ts: bee34fee976eede5a69b4a7b8423a5c9aa29bd49b21bd5001f427e7ff7c59efa
-  server/src/routes/members.ts: 6586b863330c5cbd58a48dd778b13bcd6f62eb660f776d5cc0344c3ccc672f37
+  client/vite.config.ts: 2635b1b0c25f00bcd01ee312a924b22372c08b7e5812f3cf7afa10621acea14b
+  server/src/config.ts: 361319784de0ec3fc5b293e6c42a05ed698a2d9f00a1856350b755ca385218be
+  server/src/db.ts: 59189dfe1d4fe4a3e3cfa86389b9fbf6445b7270af53a3eec2b390e7635fb4fd
+  server/src/index.ts: 8bf1866cdb94244360f9786673869c67dedf3b93aa2c05dbe8aa6b908cb871b5
 ---
 
 ```mermaid
@@ -33,14 +31,15 @@ flowchart LR
 
 ## Non-obvious edges
 
-- The client never talks to the server directly in dev — everything goes through
-  Vite's `/api` proxy (`client/vite.config.ts:8-10`), which hardcodes
-  `http://localhost:4060`. There's no env var for this; changing the server port
-  requires editing `client/vite.config.ts` and `server/src/index.ts` together.
-- `getDb()` is a lazy singleton (`server/src/db.ts:9,12`) — the DB connection and
+- The client's dev proxy target is no longer hardcoded: `client/vite.config.ts:7-8` reads
+  `TEAMBOARD_HOST`/`TEAMBOARD_PORT` (falling back to legacy `PORT`), mirroring the same
+  defaults as `server/src/config.ts`. Overriding those env vars changes both the server's
+  listen address and the client's proxy target together — there's no more editing
+  `vite.config.ts` and `index.ts` in lockstep to move the port.
+- `getDb()` is a lazy singleton (`server/src/db.ts:9,13`) — the DB connection and
   schema/seed creation only happen on the first route handler that calls it, not at
   server startup. Tests exploit this: they set `process.env.TEAMBOARD_DB_PATH` before
   importing/calling the router so the first `getDb()` call binds to `:memory:` instead
   of `data/team.db` (`server/src/routes/members.test.ts:24`).
 - The seed data (8 members) is inserted only when the table is empty
-  (`server/src/db.ts:32-45`), so it never re-runs against an existing `data/team.db`.
+  (`server/src/db.ts:30-42`), so it never re-runs against an existing `data/team.db`.
