@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db.js';
+import { notifyFailure } from '../slack.js';
 
 interface MemberRow {
   id: number;
@@ -41,6 +42,7 @@ router.post('/', (req: Request, res: Response): void => {
       res.status(409).json({ error: 'A member with this email already exists' });
       return;
     }
+    void notifyFailure({ operation: 'POST /api/members', error: err });
     throw err;
   }
 });
