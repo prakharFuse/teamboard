@@ -90,17 +90,25 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
-  db.prepare(
-    `UPDATE members SET
-      name = COALESCE(?, name),
-      email = COALESCE(?, email),
-      role = COALESCE(?, role),
-      department = COALESCE(?, department),
-      updated_at = datetime('now')
-    WHERE id = ?`
-  ).run(name ?? null, email ?? null, role ?? null, department ?? null, member.id);
-  const updated = db.prepare('SELECT * FROM members WHERE id = ?').get(member.id) as unknown as MemberRow;
-  res.json(updated);
+  try {
+    db.prepare(
+      `UPDATE members SET
+        name = COALESCE(?, name),
+        email = COALESCE(?, email),
+        role = COALESCE(?, role),
+        department = COALESCE(?, department),
+        updated_at = datetime('now')
+      WHERE id = ?`
+    ).run(name ?? null, email ?? null, role ?? null, department ?? null, member.id);
+    const updated = db.prepare('SELECT * FROM members WHERE id = ?').get(member.id) as unknown as MemberRow;
+    res.json(updated);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message.includes('UNIQUE')) {
+      res.status(409).json({ error: 'A member with this email already exists' });
+      return;
+    }
+    throw err;
+  }
 });
 
 router.delete('/:id', (req: Request, res: Response): void => {

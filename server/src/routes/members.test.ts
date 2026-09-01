@@ -67,6 +67,25 @@ test('GET /api/members lists the seeded active members', async () => {
   assert.ok(members.length > 0, 'seed data is present');
 });
 
+test('PATCH /api/members/:id rejects a duplicate email with 409', async () => {
+  const res = await call('PATCH', '/api/members/2', {
+    email: 'duplicate-email@example.com',
+  });
+  assert.equal(res.status, 409);
+  assert.deepEqual(res.json, { error: 'A member with this email already exists' });
+});
+
+test('PATCH /api/members/:id succeeds when the email is unchanged', async () => {
+  const res = await call('PATCH', '/api/members/2', {
+    email: 'test-member@example.com',
+    role: 'Staff Product Manager',
+  });
+  assert.equal(res.status, 200);
+  const member = res.json as { email: string; role: string };
+  assert.equal(member.email, 'test-member@example.com');
+  assert.equal(member.role, 'Staff Product Manager');
+});
+
 test('POST /api/members rejects an invalid department with 400', async () => {
   // RED until TM-105 lands department validation. The API currently accepts
   // any department string and returns 201, so this assertion fails on main.
