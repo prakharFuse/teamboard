@@ -3,47 +3,24 @@ name: gotchas
 description: Non-obvious traps — the intentionally-red CI test and node:sqlite quirks
 type: knowledge
 scope: global
-updated: '2026-09-01'
-captured_sha: 515477ad05c7788f020fac514c42e6ce60492008
+updated: 2026-09-01 (IONE-959)
+captured_sha: 0b416e84bdcfdfbbae5c54f529d804b02e25baf8
 sources:
+  - server/src/routes/members.ts
   - server/src/routes/members.test.ts
-  - .github/workflows/ci.yml
-  - server/src/db.ts
 sources_sha256:
-  .github/workflows/ci.yml: acffa74f2e2aae2392bbea0dd1634a68d7c481e0f4cad5a4917de1fb084e1c9e
-  server/src/db.ts: 242c5f190499d9e88e7f019c245b6a61ad9903357bb5e9a92ebc091ddad894ce
-  server/src/routes/members.test.ts: bee34fee976eede5a69b4a7b8423a5c9aa29bd49b21bd5001f427e7ff7c59efa
+  server/src/routes/members.test.ts: 1adc557969069dfb121738c586e7bc748b612b87d790f51fcef0257496d872b6
+  server/src/routes/members.ts: 73223ab7cde69649343562263ce219e9903fa0d47c8c400551df3a42a07c5d1a
 ---
 
-## The failing CI test is intentional — don't "fix" it by weakening the test
+## Every write path touching `email` must catch the UNIQUE constraint
 
-`server/src/routes/members.test.ts` has a test, `POST /api/members rejects an
-invalid department with 400`, that is **RED on `main` today by design**. The
-test file's own header comment explains it's tracking ticket TM-105:
-`POST /api/members` currently performs no department validation at all (see
-[[data-model]]) and will insert any string, returning 201. The test asserts
-400 and is written test-first, before the validation exists.
-
-**How to apply:** if asked to make CI green, or to add department
-validation, the correct fix is to add real validation to
-`server/src/routes/members.ts` (e.g. an allow-list check before the
-`INSERT`) — not to delete/loosen the test, and not to assume the feature
-already exists because a test references it. CI (`.github/workflows/ci.yml`)
-runs `pnpm typecheck && pnpm lint && pnpm test` on every PR and treats this
-as a normal, currently-failing check.
-
-## `node:sqlite` specifics
-
-- `DatabaseSync` is synchronous — there's no connection pool and no
-  async/await needed around queries. Don't wrap `db.prepare(...).run()` /
-  `.get()` / `.all()` in promises; it adds nothing and obscures errors.
-- Query results are typed `unknown` by the driver; every route casts through
-  `as unknown as MemberRow` (or similar). This isn't defensive boilerplate
-  to copy blindly — it's the only way TypeScript accepts the shape, since
-  `node:sqlite`'s types don't carry column info.
-- Tests isolate the DB via `process.env.TEAMBOARD_DB_PATH = ':memory:'`,
-  set at module load time in `members.test.ts`, *before* any route handler
-  runs. Because `getDb()` is a lazy singleton keyed off that env var read at
-  first call, setting it later (e.g. inside a `test()` body, after another
-  test already triggered `getDb()`) would silently no-op and hit the real
-  `data/team.db` file instead.
+`PATCH /api/members/:id` didn't originally catch the SQLite `UNIQUE`
+constraint error the way `POST /api/members` did. Editing a member's profile
+to an email already in use threw an uncaught exception, which Express's
+default handler turned into an HTML error page instead of a clean 409 — this
+is what "editing a team member's profile sometimes fails with a server error
+page" turned out to be. Both routes now wrap the write in try/catch and match
+`err.message.includes('UNIQUE')` (see [[data-model]]). Any new route that
+inserts/updates `email` needs the same guard, or a duplicate-email write will
+crash instead of returning 409.

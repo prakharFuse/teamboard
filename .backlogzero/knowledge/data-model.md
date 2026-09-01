@@ -3,12 +3,12 @@ name: data-model
 description: The members table schema — read before adding fields or queries
 type: knowledge
 scope: global
-updated: '2026-09-01'
-captured_sha: 515477ad05c7788f020fac514c42e6ce60492008
+updated: 2026-09-01 (IONE-959)
+captured_sha: 0b416e84bdcfdfbbae5c54f529d804b02e25baf8
 sources:
-  - server/src/db.ts
+  - server/src/routes/members.ts
 sources_sha256:
-  server/src/db.ts: 242c5f190499d9e88e7f019c245b6a61ad9903357bb5e9a92ebc091ddad894ce
+  server/src/routes/members.ts: 73223ab7cde69649343562263ce219e9903fa0d47c8c400551df3a42a07c5d1a
 ---
 
 Single-table schema, defined inline in `getDb()` (no migration files exist —
@@ -30,10 +30,12 @@ erDiagram
     }
 ```
 
-- `email` has a `UNIQUE` constraint — `POST /api/members` catches the
-  resulting SQLite error by matching `err.message.includes('UNIQUE')` and
-  returns 409 (`server/src/routes/members.ts:39-44`). Any other DB error is
-  rethrown, so it isn't silently swallowed.
+- `email` has a `UNIQUE` constraint — both `POST /api/members`
+  (`server/src/routes/members.ts:33-45`) and `PATCH /api/members/:id`
+  (`server/src/routes/members.ts:93-111`) catch the resulting SQLite error by
+  matching `err.message.includes('UNIQUE')` and return 409. Any other DB
+  error is rethrown, so it isn't silently swallowed. See [[gotchas]] — the
+  `PATCH` route didn't always have this catch.
 - `department` has **no** constraint or enum at the DB or route level —
   `POST`/`PATCH` accept any string. See
   [[gotchas]] for why this is a live, intentionally-tracked gap rather than
