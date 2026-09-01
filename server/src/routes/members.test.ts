@@ -69,7 +69,7 @@ test('GET /api/members lists the seeded active members', async () => {
 
 test('PATCH /api/members/:id rejects a duplicate email with 409', async () => {
   const res = await call('PATCH', '/api/members/2', {
-    email: 'alice.chen@company.com',
+    email: 'duplicate-email@example.com',
   });
   assert.equal(res.status, 409);
   assert.deepEqual(res.json, { error: 'A member with this email already exists' });
@@ -77,12 +77,12 @@ test('PATCH /api/members/:id rejects a duplicate email with 409', async () => {
 
 test('PATCH /api/members/:id succeeds when the email is unchanged', async () => {
   const res = await call('PATCH', '/api/members/2', {
-    email: 'bob.martinez@company.com',
+    email: 'test-member@example.com',
     role: 'Staff Product Manager',
   });
   assert.equal(res.status, 200);
   const member = res.json as { email: string; role: string };
-  assert.equal(member.email, 'bob.martinez@company.com');
+  assert.equal(member.email, 'test-member@example.com');
   assert.equal(member.role, 'Staff Product Manager');
 });
 
