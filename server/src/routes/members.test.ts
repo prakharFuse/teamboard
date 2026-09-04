@@ -52,6 +52,21 @@ async function call(
   }
 }
 
+async function callText(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -160,19 +175,11 @@ test('GET /api/members/export includes a soft-deleted member with is_active = 0'
   const deleted = await call('DELETE', `/api/members/${id}`);
   assert.equal(deleted.status, 200);
 
-  const server = app.listen(0);
-  let csv: string;
-  try {
-    const { port } = server.address() as AddressInfo;
-    const res = await fetch(`http://127.0.0.1:${port}/api/members/export`);
-    assert.equal(res.status, 200);
-    csv = await res.text();
-  } finally {
-    server.close();
-  }
+  const { status, text: csv } = await callText('GET', '/api/members/export');
+  assert.equal(status, 200);
 
   const line = csv.split('\n').find((l) => l.includes(memberData.email));
-  assert.ok(line, 'exported CSV must contain the soft-deleted member');
-  const fields = line!.split(',');
+  if (!line) throw new Error('exported CSV must contain the soft-deleted member');
+  const fields = line.split(',');
   assert.equal(fields[fields.length - 1], '0');
 });
