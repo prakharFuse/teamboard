@@ -13,6 +13,24 @@ interface MemberRow {
   updated_at: string;
 }
 
+const VALID_DEPARTMENTS = new Set([
+  'Engineering',
+  'Product',
+  'Design',
+  'Marketing',
+  'Sales',
+  'Human Resources',
+]);
+
+const DEPARTMENT_ALIASES: Record<string, string> = {
+  Eng: 'Engineering',
+};
+
+function isValidDepartment(department: string): boolean {
+  const resolved = DEPARTMENT_ALIASES[department] ?? department;
+  return VALID_DEPARTMENTS.has(resolved);
+}
+
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
@@ -27,6 +45,10 @@ router.post('/', (req: Request, res: Response): void => {
   const { name, email, role, department, start_date } = req.body;
   if (!name || !email || !role || !department || !start_date) {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
+    return;
+  }
+  if (!isValidDepartment(department)) {
+    res.status(400).json({ error: 'Invalid department' });
     return;
   }
   const db = getDb();
@@ -90,6 +112,10 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
+  if (department !== undefined && department !== null && !isValidDepartment(department)) {
+    res.status(400).json({ error: 'Invalid department' });
+    return;
+  }
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
