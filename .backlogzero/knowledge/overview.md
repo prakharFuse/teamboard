@@ -4,21 +4,21 @@ description: What TeamBoard is, tech stack, and where things live — read first
 type: knowledge
 scope: global
 updated: 2026-09-04 (IONE-959)
-captured_sha: 515477ad05c7788f020fac514c42e6ce60492008
+captured_sha: 5635cd0b7f7bfd5a748edb97b564409088129f7d
 sources:
-  - package.json
-  - README.md
-  - server/src/index.ts
+  - server/src/routes/members.ts
+  - server/src/db.ts
+  - client/src/App.tsx
 sources_sha256:
-  README.md: 3d21bbec3cdd5901a9448358c7af568506285536850ff6d875c57a6e9c38cb23
-  package.json: 18a1323a5738fdea35d5d336cb3b3cdf79a1b76ae97ca8886052d844d2e63551
-  server/src/index.ts: 6c2c286cd087d1bbf54d47cbab8b0ee3aa1e86795a2a1a615588e18f9541762b
+  client/src/App.tsx: 50903abfd99acdd441fab7e3084e6e6f1dc989627e78c4d76c0a4bc911639c14
+  server/src/db.ts: 242c5f190499d9e88e7f019c245b6a61ad9903357bb5e9a92ebc091ddad894ce
+  server/src/routes/members.ts: 66ad1e6fb359caeadc367ce0c6c3105764e8e91b0167bfa3533e4c3d2bea6b7b
 ---
 
 TeamBoard is a small internal team-directory app: Express + `node:sqlite` API, React/Vite client. For tech stack, scripts, API endpoint table, and project structure, see `../../README.md` — it's accurate and doesn't need repeating here.
 
 ## Gaps not covered in the README
 
-- **CI is intentionally red on `main`.** `server/src/routes/members.test.ts` has a test (`POST /api/members rejects an invalid department with 400`) that fails today because no department validation exists yet (tracked as TM-105 in the test's own comments). Don't treat a failing `pnpm test` as a regression you introduced — check whether it's this known-red test before investigating further. See [[gotchas]].
-- **No department allow-list anywhere.** The `department` field on `POST`/`PATCH /api/members` is a free-text string end-to-end (plain `<input>` in `client/src/App.tsx`, no server check in `server/src/routes/members.ts`). Seed data even has inconsistent values (`'Engineering'` vs `'Eng'` for two different engineers in `server/src/db.ts`).
+- **`department` is now validated server-side against an allow-list, but only server-side.** `POST`/`PATCH /api/members` check `department` against `VALID_DEPARTMENTS` via `isValidDepartment()` in `server/src/routes/members.ts`, so `pnpm test`'s `rejects an invalid department with 400` case (previously tracked as TM-105, formerly red on `main`) now passes. The client's `department` field is still a plain free-text `<input>` in `client/src/App.tsx` — only the server enforces the allow-list.
+- **The allow-list has aliases that pass validation but aren't normalized on write.** `DEPARTMENT_ALIASES` in `server/src/routes/members.ts` maps `'Eng'` → `'Engineering'` for the validation check only; the raw unaliased string is still what gets `INSERT`ed/`UPDATE`d. Seed data (`server/src/db.ts`) already has two engineers stored as `'Eng'` — that's why `/api/members/stats` still groups them separately from `'Engineering'`. See [[gotchas]].
 - **`PATCH /api/members/:id` only updates `name`, `email`, `role`, `department`.** It cannot change `start_date` or `is_active` — there's no route that ever flips `is_active`. See [[gotchas]] for why that matters.
