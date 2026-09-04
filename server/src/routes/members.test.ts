@@ -52,6 +52,21 @@ async function call(
   }
 }
 
+async function callText(
+  method: string,
+  path: string,
+): Promise<{ status: number; text: string }> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`, { method });
+    const text = await res.text();
+    return { status: res.status, text };
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -82,4 +97,89 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     400,
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
+});
+
+test('DELETE /api/members/:id soft-deletes: row and data are preserved', async () => {
+  const memberData = {
+    name: 'Jamie Fakename',
+    email: `soft-delete-${Date.now()}@example.test`,
+    role: 'Tester',
+    department: 'Engineering',
+    start_date: '2023-05-01',
+  };
+  const created = await call('POST', '/api/members', memberData);
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const deleted = await call('DELETE', `/api/members/${id}`);
+  assert.equal(deleted.status, 200);
+  assert.deepEqual(deleted.json, { success: true });
+
+  const fetched = await call('GET', `/api/members/${id}`);
+  assert.equal(fetched.status, 200);
+  const member = fetched.json as {
+    is_active: number;
+    name: string;
+    email: string;
+    role: string;
+    start_date: string;
+  };
+  assert.equal(member.is_active, 0);
+  assert.equal(member.name, memberData.name);
+  assert.equal(member.email, memberData.email);
+  assert.equal(member.role, memberData.role);
+  assert.equal(member.start_date, memberData.start_date);
+});
+
+test('DELETE /api/members/:id returns 404 for a non-existent id', async () => {
+  const res = await call('DELETE', '/api/members/999999');
+  assert.equal(res.status, 404);
+});
+
+test('GET /api/members excludes a soft-deleted member from the active directory', async () => {
+  const memberData = {
+    name: 'Robin Fakename',
+    email: `soft-delete-directory-${Date.now()}@example.test`,
+    role: 'Tester',
+    department: 'Engineering',
+    start_date: '2023-06-01',
+  };
+  const created = await call('POST', '/api/members', memberData);
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const deleted = await call('DELETE', `/api/members/${id}`);
+  assert.equal(deleted.status, 200);
+
+  const res = await call('GET', '/api/members');
+  assert.equal(res.status, 200);
+  const members = (res.json as { members: { id: number }[] }).members;
+  assert.ok(
+    members.every((m) => m.id !== id),
+    'soft-deleted member must not appear in the active directory',
+  );
+});
+
+test('GET /api/members/export includes a soft-deleted member with is_active = 0', async () => {
+  const memberData = {
+    name: 'Casey Fakename',
+    email: `soft-delete-export-${Date.now()}@example.test`,
+    role: 'Tester',
+    department: 'Engineering',
+    start_date: '2023-07-01',
+  };
+  const created = await call('POST', '/api/members', memberData);
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const deleted = await call('DELETE', `/api/members/${id}`);
+  assert.equal(deleted.status, 200);
+
+  const { status, text: csv } = await callText('GET', '/api/members/export');
+  assert.equal(status, 200);
+
+  const line = csv.split('\n').find((l) => l.includes(memberData.email));
+  if (!line) throw new Error('exported CSV must contain the soft-deleted member');
+  const fields = line.split(',');
+  assert.equal(fields[fields.length - 1], '0');
 });
