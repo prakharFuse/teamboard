@@ -208,3 +208,36 @@ test('GET /api/members/export still includes a soft-deleted member with its deac
     `export must still include the deactivated member's row (expected "${expectedRow}", got:\n${csv})`,
   );
 });
+
+test('DELETE /api/members/:id is idempotent: a second delete does not double-prefix the email or error', async () => {
+  const originalEmail = `idempotent-delete-${Date.now()}@company.com`;
+  const created = await call('POST', '/api/members', {
+    name: 'Idempotent Delete Test',
+    email: originalEmail,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const firstDelete = await call('DELETE', `/api/members/${id}`);
+  assert.equal(firstDelete.status, 200);
+
+  const secondDelete = await call('DELETE', `/api/members/${id}`);
+  assert.equal(
+    secondDelete.status,
+    200,
+    `second delete must succeed rather than error (got ${secondDelete.status}: ${JSON.stringify(secondDelete.json)})`,
+  );
+
+  const getRes = await call('GET', `/api/members/${id}`);
+  assert.equal(getRes.status, 200);
+  const member = getRes.json as { is_active: number; email: string };
+  assert.equal(
+    member.email,
+    `deactivated-${originalEmail}`,
+    'email must carry exactly one deactivated- prefix, not a double prefix',
+  );
+  assert.equal(member.is_active, 0);
+});
