@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "a26bda67fa2a403ceef303df02dba2d05a514a571c9918e1be6ba40a2b5f3a92",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1103,
+      "sha256": "b2e41d1a62eeadba5a3511ac5375fc76723eddb3795a728e950836f46b3b1b46"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 1978,
+      "sha256": "27d46cb1c52e25952d196ba9b3f41490859433c77631c83f01b133f44c50a805"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1825,
+      "sha256": "87bfd4ea2279b0c0366a69a46956079e1380b8f562cd60bc36d29a6ae26244d8"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 1398,
+      "sha256": "b8459031d4ea329c5c020d9c1533ebe391b3c10a0c5dcffc29478bc6dc25369b"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "## Repository Purpose",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "## Running & Testing",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "## Code Style",
+      "sources": [
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "## Fixture Content -- Do Not Clean Up",
+      "sources": [
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "## Reseeding / Scope",
+      "sources": [
+        "knowledge/fixture-gotchas.md",
+        "knowledge/overview.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Module dependency diagram: single Node process with no network boundary between modules except the fetch call to the upstream API",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "tasks command path: index.js -> ApiClient.listTasks() -> ApiClient.request() -> fetch(); retry loop calls logger.warn on each failed attempt",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js and api-client.js never import each other -- their only shared dependency is logger.js",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Per-file breakdown of src/index.js, src/logger.js, src/api-client.js, src/store.js responsibilities",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Related pages links to architecture, fixture-gotchas, coding-style",
+      "reason": "not-always-applicable"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2907,
+  "lines": 37,
+  "overTarget": false,
+  "generatedAt": "2026-09-16T19:12:59.246Z"
+}
