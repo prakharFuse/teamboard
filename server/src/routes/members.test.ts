@@ -274,3 +274,28 @@ test('DELETE /api/members/:id dispatches SSO deprovision synchronously with only
     dispatchSpy.mock.restore();
   }
 });
+
+test('GET /api/members/export locks the BambooHR column order and only emits canonical departments', async () => {
+  const CANONICAL_DEPARTMENTS = [
+    'Engineering', 'Product', 'Design', 'Marketing',
+    'Sales', 'Operations', 'Finance', 'HR', 'Legal',
+  ];
+
+  const csv = await callCsv('/api/members/export');
+  const rows = csv.split('\n').filter(row => row.length > 0);
+  assert.equal(
+    rows[0],
+    'id,name,email,role,department,start_date,is_active',
+    'export header must match BambooHR\'s expected position-based column order exactly',
+  );
+
+  const dataRows = rows.slice(1);
+  assert.ok(dataRows.length > 0, 'seed data must produce at least one export row');
+  for (const row of dataRows) {
+    const department = row.split(',')[4];
+    assert.ok(
+      CANONICAL_DEPARTMENTS.includes(department),
+      `export row has a non-canonical department "${department}" (row: "${row}")`,
+    );
+  }
+});
