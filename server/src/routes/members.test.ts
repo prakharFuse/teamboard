@@ -13,11 +13,11 @@
  * No test framework dependency — Node's built-in test runner + an ephemeral
  * in-process Express server on an in-memory SQLite DB.
  */
-import { test, before } from 'node:test';
+import { test, before, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
-import membersRouter from './members.js';
+import membersRouter, { ssoDeprovision } from './members.js';
 
 // Isolated throwaway DB — must be set before the first getDb() call (handlers
 // call getDb() lazily, so setting it here, before any request, is enough).
@@ -240,4 +240,37 @@ test('DELETE /api/members/:id is idempotent: a second delete does not double-pre
     'email must carry exactly one deactivated- prefix, not a double prefix',
   );
   assert.equal(member.is_active, 0);
+});
+
+test('DELETE /api/members/:id dispatches SSO deprovision synchronously with only the member id', async () => {
+  const originalEmail = `sso-dispatch-${Date.now()}@company.com`;
+  const created = await call('POST', '/api/members', {
+    name: 'SSO Dispatch Test',
+    email: originalEmail,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const dispatchSpy = mock.method(ssoDeprovision, 'dispatch', () => {});
+  try {
+    const deleteRes = await call('DELETE', `/api/members/${id}`);
+    assert.equal(deleteRes.status, 200);
+
+    assert.equal(
+      dispatchSpy.mock.callCount(),
+      1,
+      'SSO deprovision must fire exactly once, synchronously, from the delete request',
+    );
+    const call0 = dispatchSpy.mock.calls[0];
+    assert.deepEqual(
+      call0.arguments,
+      [id],
+      'SSO deprovision must receive only the member id, never the raw email or a secret',
+    );
+  } finally {
+    dispatchSpy.mock.restore();
+  }
 });
