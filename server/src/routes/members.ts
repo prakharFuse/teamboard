@@ -13,6 +13,15 @@ interface MemberRow {
   updated_at: string;
 }
 
+const CANONICAL_DEPARTMENTS = [
+  'Engineering', 'Product', 'Design', 'Marketing',
+  'Sales', 'Operations', 'Finance', 'HR', 'Legal',
+];
+
+function isCanonicalDepartment(department: string): boolean {
+  return CANONICAL_DEPARTMENTS.includes(department);
+}
+
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
@@ -29,11 +38,10 @@ router.post('/', (req: Request, res: Response): void => {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
     return;
   }
-  // TM-105 root cause: `department` is inserted as-is with no check against
-  // BambooHR's canonical list (Engineering, Product, Design, Marketing,
-  // Sales, Operations, Finance, HR, Legal), so non-canonical values (e.g.
-  // 'Eng', 'Human Resources') reach the CSV export and are rejected by
-  // BambooHR's import. Fix belongs here, not in the seed data or the test.
+  if (!isCanonicalDepartment(department)) {
+    res.status(400).json({ error: `Invalid department: ${department}. Must be one of: ${CANONICAL_DEPARTMENTS.join(', ')}` });
+    return;
+  }
   const db = getDb();
   try {
     db.prepare(
@@ -95,8 +103,10 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
-  // TM-105: same missing BambooHR canonical-department check as POST above —
-  // any string passed here is written straight to the row.
+  if (department !== undefined && !isCanonicalDepartment(department)) {
+    res.status(400).json({ error: `Invalid department: ${department}. Must be one of: ${CANONICAL_DEPARTMENTS.join(', ')}` });
+    return;
+  }
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
