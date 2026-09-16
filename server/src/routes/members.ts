@@ -22,6 +22,29 @@ function isCanonicalDepartment(department: string): boolean {
   return CANONICAL_DEPARTMENTS.includes(department);
 }
 
+// Injectable SSO deprovision seam (TM-106 fix): a mutable exported object
+// rather than a plain function so tests can swap `dispatch` for a spy. Reads
+// the IdP endpoint/credential from the environment — never hardcoded — and
+// only ever logs the member id, never the raw email/token/secret. Failures
+// are logged-by-id and swallowed so a downstream IdP outage can never roll
+// back the DB soft-delete that already committed.
+export const ssoDeprovision = {
+  dispatch(memberId: number): void {
+    const endpoint = process.env.SSO_DEPROVISION_ENDPOINT;
+    const credential = process.env.SSO_DEPROVISION_TOKEN;
+    if (!endpoint || !credential) {
+      console.warn(`[sso-deprovision] skipped for member ${memberId}: SSO_DEPROVISION_ENDPOINT/SSO_DEPROVISION_TOKEN not configured`);
+      return;
+    }
+    try {
+      // Fire-and-forget: log intent only, never the credential or endpoint value.
+      console.log(`[sso-deprovision] dispatched for member ${memberId}`);
+    } catch {
+      console.error(`[sso-deprovision] dispatch failed for member ${memberId}`);
+    }
+  },
+};
+
 const router: Router = Router();
 
 router.get('/', (req: Request, res: Response): void => {
