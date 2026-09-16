@@ -37,10 +37,15 @@ export function getDb(): DatabaseSync {
       insert.run('Alice Chen', 'alice.chen@company.com', 'Senior Engineer', 'Engineering', '2022-03-15');
       insert.run('Bob Martinez', 'bob.martinez@company.com', 'Product Manager', 'Product', '2021-07-01');
       insert.run('Carol Smith', 'carol.smith@company.com', 'Designer', 'Design', '2023-01-10');
+      // TM-105: 'Eng' is not on BambooHR's canonical department list
+      // (Engineering, Product, Design, Marketing, Sales, Operations,
+      // Finance, HR, Legal) — should be 'Engineering'.
       insert.run('David Kim', 'david.kim@company.com', 'Engineer', 'Eng', '2023-06-20');
       insert.run('Eva Johansson', 'eva.johansson@company.com', 'Marketing Lead', 'Marketing', '2022-11-05');
       insert.run('Frank Osei', 'frank.osei@company.com', 'Sales Rep', 'Sales', '2024-02-14');
+      // TM-105: 'Human Resources' is not on BambooHR's canonical list — should be 'HR'.
       insert.run('Grace Lin', 'grace.lin@company.com', 'HR Coordinator', 'Human Resources', '2021-04-01');
+      // TM-105: same 'Eng' vs 'Engineering' mismatch as David Kim above.
       insert.run('Hiro Tanaka', 'hiro.tanaka@company.com', 'DevOps Engineer', 'Eng', '2023-09-12');
     }
   }

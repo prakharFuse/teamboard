@@ -29,6 +29,11 @@ router.post('/', (req: Request, res: Response): void => {
     res.status(400).json({ error: 'Missing required fields: name, email, role, department, start_date' });
     return;
   }
+  // TM-105 root cause: `department` is inserted as-is with no check against
+  // BambooHR's canonical list (Engineering, Product, Design, Marketing,
+  // Sales, Operations, Finance, HR, Legal), so non-canonical values (e.g.
+  // 'Eng', 'Human Resources') reach the CSV export and are rejected by
+  // BambooHR's import. Fix belongs here, not in the seed data or the test.
   const db = getDb();
   try {
     db.prepare(
@@ -90,6 +95,8 @@ router.patch('/:id', (req: Request, res: Response): void => {
     return;
   }
   const { name, email, role, department } = req.body;
+  // TM-105: same missing BambooHR canonical-department check as POST above —
+  // any string passed here is written straight to the row.
   db.prepare(
     `UPDATE members SET
       name = COALESCE(?, name),
