@@ -1,4 +1,4 @@
-# TeamBoard
+# Teamboard
 
 Internal team directory for managing team member profiles, departments, and HR reporting.
 
