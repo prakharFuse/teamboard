@@ -52,6 +52,17 @@ async function call(
   }
 }
 
+async function callCsv(path: string): Promise<string> {
+  const server = app.listen(0);
+  try {
+    const { port } = server.address() as AddressInfo;
+    const res = await fetch(`http://127.0.0.1:${port}${path}`);
+    return await res.text();
+  } finally {
+    server.close();
+  }
+}
+
 let firstRunReady = false;
 before(() => {
   // Touch the DB once so the seed rows exist before the first assertion.
@@ -133,4 +144,67 @@ test('PATCH /api/members/:id accepts a valid canonical department and updates it
   const getRes = await call('GET', `/api/members/${id}`);
   assert.equal(getRes.status, 200);
   assert.equal((getRes.json as { department: string }).department, 'Design');
+});
+
+test('DELETE /api/members/:id soft-deletes: marks inactive, prefixes email once, and drops the member from listings and stats', async () => {
+  const originalEmail = `soft-delete-${Date.now()}@company.com`;
+  const created = await call('POST', '/api/members', {
+    name: 'Soft Delete Test',
+    email: originalEmail,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const statsBefore = await call('GET', '/api/members/stats');
+  assert.equal(statsBefore.status, 200);
+  const totalBefore = (statsBefore.json as { total: number }).total;
+
+  const deleteRes = await call('DELETE', `/api/members/${id}`);
+  assert.equal(deleteRes.status, 200);
+
+  const getRes = await call('GET', `/api/members/${id}`);
+  assert.equal(getRes.status, 200);
+  const member = getRes.json as { is_active: number; email: string };
+  assert.equal(member.is_active, 0);
+  assert.equal(member.email, `deactivated-${originalEmail}`);
+
+  const listRes = await call('GET', '/api/members');
+  assert.equal(listRes.status, 200);
+  const listedIds = (listRes.json as { members: { id: number }[] }).members.map(m => m.id);
+  assert.ok(!listedIds.includes(id), 'deactivated member must not appear in GET /');
+
+  const statsAfter = await call('GET', '/api/members/stats');
+  assert.equal(statsAfter.status, 200);
+  assert.equal(
+    (statsAfter.json as { total: number }).total,
+    totalBefore - 1,
+    'deactivated member must be excluded from GET /stats total',
+  );
+});
+
+test('GET /api/members/export still includes a soft-deleted member with its deactivated- email', async () => {
+  const originalEmail = `export-soft-delete-${Date.now()}@company.com`;
+  const created = await call('POST', '/api/members', {
+    name: 'Export Soft Delete Test',
+    email: originalEmail,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const deleteRes = await call('DELETE', `/api/members/${id}`);
+  assert.equal(deleteRes.status, 200);
+
+  const csv = await callCsv('/api/members/export');
+  const expectedRow = `${id},Export Soft Delete Test,deactivated-${originalEmail},Engineer,Engineering,2024-01-01,0`;
+  const rows = csv.split('\n');
+  assert.ok(
+    rows.includes(expectedRow),
+    `export must still include the deactivated member's row (expected "${expectedRow}", got:\n${csv})`,
+  );
 });
