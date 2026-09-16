@@ -119,6 +119,17 @@ router.delete('/:id', (req: Request, res: Response): void => {
     res.status(404).json({ error: 'Member not found' });
     return;
   }
+  // TM-106 root cause: this is a hard delete — the row is removed outright,
+  // so `is_active` never goes to 0 and the email is never prefixed with
+  // 'deactivated-'. The external Okta sync keys off exactly that signal
+  // (is_active=0 + 'deactivated-' email prefix) to deprovision SSO; a
+  // physically absent row produces neither, so a departed employee's SSO
+  // access is never revoked (confirmed by SUP-2: 21 daily Okta syncs saw 0
+  // deactivation signals for the affected member). Fix belongs here — turn
+  // this into a soft-delete (is_active=0, 'deactivated-' email prefix) plus
+  // a synchronous SSO deprovision dispatch — not a new endpoint. No
+  // auth/tenant middleware exists anywhere in this service (see index.ts)
+  // to mirror for that dispatch call.
   db.prepare('DELETE FROM members WHERE id = ?').run(member.id);
   res.json({ success: true });
 });
