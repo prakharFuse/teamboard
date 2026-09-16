@@ -83,3 +83,54 @@ test('POST /api/members rejects an invalid department with 400', async () => {
     `invalid department must be rejected with 400 (got ${res.status}: ${JSON.stringify(res.json)})`,
   );
 });
+
+test('PATCH /api/members/:id rejects an invalid department with 400 and leaves department unchanged', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Reject Test',
+    email: `patch-reject-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const patchRes = await call('PATCH', `/api/members/${id}`, {
+    department: 'NotARealDepartment',
+  });
+  assert.equal(
+    patchRes.status,
+    400,
+    `invalid department must be rejected with 400 (got ${patchRes.status}: ${JSON.stringify(patchRes.json)})`,
+  );
+
+  const getRes = await call('GET', `/api/members/${id}`);
+  assert.equal(getRes.status, 200);
+  assert.equal(
+    (getRes.json as { department: string }).department,
+    'Engineering',
+    'department must remain the seeded value after a rejected PATCH',
+  );
+});
+
+test('PATCH /api/members/:id accepts a valid canonical department and updates it', async () => {
+  const created = await call('POST', '/api/members', {
+    name: 'Patch Accept Test',
+    email: `patch-accept-${Date.now()}@company.com`,
+    role: 'Engineer',
+    department: 'Engineering',
+    start_date: '2024-01-01',
+  });
+  assert.equal(created.status, 201);
+  const id = (created.json as { id: number }).id;
+
+  const patchRes = await call('PATCH', `/api/members/${id}`, {
+    department: 'Design',
+  });
+  assert.equal(patchRes.status, 200);
+  assert.equal((patchRes.json as { department: string }).department, 'Design');
+
+  const getRes = await call('GET', `/api/members/${id}`);
+  assert.equal(getRes.status, 200);
+  assert.equal((getRes.json as { department: string }).department, 'Design');
+});
