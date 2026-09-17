@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "567d819fd3a9d2eeae72b78a55b6301bf4af8a537bdcd8742896ba1ba018d4c2",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1233,
+      "sha256": "5febed16a566e7e2695e31f1781ce60312a02fd4ee5517922647020b4e1284d8"
+    },
+    {
+      "path": "knowledge/fixture-notes.md",
+      "chars": 2283,
+      "sha256": "dddc2ca170375b971fa7449ffaad821b2599737084cf443b54e8021475acc41c"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1865,
+      "sha256": "e1e6a6059853429b830206b8d2026ab53b62d550e5245d64bce147ec5a0eefd8"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 1329,
+      "sha256": "9ca1bc64bd52c25cbfec8d7608fa8a910e3d23c6619c6306f7ab79ef448a0bfb"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 1066,
+      "sha256": "07f923d4a9daf0fc49821d47e3aa980c2a54fe6704ce2f5fcb60fc75cddf9e45"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Teamboard (Fixture Repository)",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## What This Repo Is",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Environment & Commands",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Code Style",
+      "sources": [
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "## Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "## Fixture Gotchas — Do Not \"Fix\" Unless the Ticket Asks",
+      "sources": [
+        "knowledge/fixture-notes.md",
+        "knowledge/overview.md",
+        "conventions/coding-style.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full mermaid module graph of src/index.js, logger.js, api-client.js, store.js and their edges",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient imports logger only to log retry warnings — it never touches store.js",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "The only test (test/logger.test.js) exercises logger.js in isolation; api-client.js, store.js, and index.js have no test coverage",
+      "reason": "redundant-with",
+      "detail": "Testing section already states only test/logger.test.js exists and other modules lack coverage"
+    },
+    {
+      "source": "conventions/coding-style.md",
+      "rule": "Named list of specific exported functions/objects (logger, getSetting, setSetting, allSettings, setLevel, parseArgs) as examples of the function/module-object export pattern",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-notes.md",
+      "rule": "Exact magic values in src/api-client.js: baseUrl https://api.teamboard.example.com/v1, region 'us-east-1', retry count 3, timeout 15000, backoff base 250 * 2 ** attempt, per_page=50",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "File-by-file list of src/index.js, src/logger.js, src/api-client.js, src/store.js, test/logger.test.js roles",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/coding-style.md",
+      "rule": "README.md's Configuration section references src/config.ts which does not exist",
+      "reason": "redundant-with",
+      "detail": "Kept once in Fixture Gotchas section, sourced primarily from knowledge/overview.md"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3245,
+  "lines": 32,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T04:09:44.772Z"
+}
