@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "2370d7b1c9a025787c8a0b25b25336228f6ff02f8b8bafc4c72cae6d6d8af8de",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1142,
+      "sha256": "03ce9f788fe43511f642788b3fb29ac57f721e212e07318544b3cd9095daf77b"
+    },
+    {
+      "path": "knowledge/gotchas.md",
+      "chars": 2503,
+      "sha256": "5f598380a2c761bcf1b800d4529b70f13cab4af07b5282ca9daa88f60ef0a2e0"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1921,
+      "sha256": "68f1d382c3072b64571984fc07148be9a11a79613ca8163da4a484caaf3fcd5d"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1348,
+      "sha256": "82aecd56dfd23c50af5544411034354b1100cf52f4fb9fea5b0e076dcb9c7f22"
+    },
+    {
+      "path": "conventions/tooling.md",
+      "chars": 1101,
+      "sha256": "8f972d57984b2e1391754ae646fe5a252836dc3d710fbd998d8e9d4c74648783"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Context",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Setup & Running",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/tooling.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md",
+        "conventions/tooling.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/tooling.md"
+      ]
+    },
+    {
+      "heading": "# Planted Fixture Issues — Do Not Fix Incidentally",
+      "sources": [
+        "knowledge/gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Mermaid flowchart of module call graph (CLI -> Logger/Store/ApiClient -> Upstream)",
+      "reason": "scoped-not-global"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "'tasks command is the only path that touches ApiClient; status and help never make network calls' and 'ApiClient.request() calls back into logger.warn on every retry'",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "File-by-file layout list (src/index.js, src/logger.js, src/api-client.js, src/store.js, test/logger.test.js descriptions)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/gotchas.md",
+      "rule": "'This repo is a journey-suite fixture... Each is marked in-code with a FIXTURE NOTE comment' framing narrative",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "'npm install # no external dependencies today' example snippet framing",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "conventions/code-style.md",
+      "rule": "Restating that logger.js and store.js export plain functions/objects instead of classes (functions over classes rule)",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "conventions/tooling.md",
+      "rule": "'CLI is run via npm start -- <args> ... package.json's start script is node src/index.js' as separate bullet",
+      "reason": "redundant-with"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3785,
+  "lines": 39,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T17:29:11.632Z"
+}
