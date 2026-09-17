@@ -31,3 +31,7 @@ npm start -- --help
 
 Environment variables are read in `src/config.ts`. See that file for the
 current list.
+
+## Contributing
+
+Please open an issue before submitting a pull request.
