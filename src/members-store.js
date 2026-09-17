@@ -12,6 +12,8 @@ export function listMembers() {
   return members;
 }
 
+// Strict `=== 1` mirrors the ticket's `is_active = 1` semantics exactly, so
+// truthy-but-not-1 values (e.g. `true`, `'1'`) are never miscounted as active.
 export function countActiveMembers() {
   return members.filter((member) => member.is_active === 1).length;
 }
