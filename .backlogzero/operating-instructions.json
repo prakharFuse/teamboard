@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "c7088ea71a52fbe1b698867f73c2eda190e96a1991d494c55f41f6eb04b8abcb",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1377,
+      "sha256": "d9e6088b20c30eda1a9b1f113fbc1e1855ce5a0f8738f6eec50c3791042f5258"
+    },
+    {
+      "path": "knowledge/fixture-design.md",
+      "chars": 1881,
+      "sha256": "10a48e6431ee49e04871a60ea398e1ee2d6fb1b198da8e0de9319f028879729b"
+    },
+    {
+      "path": "knowledge/gotchas.md",
+      "chars": 1506,
+      "sha256": "d1b1b572093df46f891d1ca7c5bb8f5c0f025c6a3fdf25b40b5d3c77060b4872"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1843,
+      "sha256": "dd131203de99fba922076c4edec6382e92af6d576d9dbbd5dead3ac868fe0475"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 1693,
+      "sha256": "2775e4cb4e10416502397ae2d6bb224525f5b2ff8c5d5e417e2d894725a10b9f"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/fixture-design.md",
+        "knowledge/architecture.md",
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "# Running & Testing",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/gotchas.md"
+      ]
+    },
+    {
+      "heading": "# Gotchas",
+      "sources": [
+        "knowledge/gotchas.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Fixture Rough Edges — Leave Alone Unless a Ticket Asks",
+      "sources": [
+        "knowledge/fixture-design.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/coding-style.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Testing Conventions",
+      "sources": [
+        "conventions/coding-style.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Mermaid module call-graph diagram (CLI -> Logger/Store/Client -> API)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Full file tree listing (package.json, README.md, src/index.js, src/api-client.js, src/logger.js, src/store.js, test/logger.test.js)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-design.md",
+      "rule": "Repo is reconciled from external seed pack at tests/journeys/seed/journey-repo/",
+      "reason": "not-always-applicable"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3935,
+  "lines": 45,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T03:38:26.333Z"
+}
