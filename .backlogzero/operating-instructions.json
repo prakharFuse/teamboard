@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "c3ba1ba9a6cf2fe0688103e858335042453bea51f26920b5dea12c0fb1623090",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1075,
+      "sha256": "793672f599819c4a97d95bac36121673d60d3f1e535dd2f322351b5b10110392"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1410,
+      "sha256": "c9934f2a71788786182e3ed045b6d6dc4820d46ef180006f1ba5a191cf67c3fc"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 956,
+      "sha256": "6dc5c19caf33703cfbe262bb5fde0bf27fd82f7f34598e1ad853081cd4afca13"
+    },
+    {
+      "path": "conventions/fixture-notes.md",
+      "chars": 1903,
+      "sha256": "f3502875e0c9ac234272eed0ed9915680b607c2136e2bffdacd5291ede96242a"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Teamboard",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "## Running & Testing",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "## Code Style",
+      "sources": [
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "## Known Divergence From README",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/fixture-notes.md"
+      ]
+    },
+    {
+      "heading": "## Fixture Constraints — Do Not \"Clean Up\" Incidentally",
+      "sources": [
+        "conventions/fixture-notes.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "module graph / mermaid diagram of src/index.js, logger.js, api-client.js, store.js, test/logger.test.js relationships",
+      "reason": "scoped-not-global"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient is the sole module that reaches outside the process (via global fetch), and logs through src/logger.js on retry",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "src/store.js holds settings only in a module-level Map — nothing persisted to disk or a database, so there is no data-model page for this repo",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "test/logger.test.js is the only test file and exercises src/logger.js exclusively",
+      "reason": "redundant-with",
+      "detail": "covered by coding-style.md's testing convention and overview.md's `npm test` note"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "src/index.js is wired via package.json's main and start script",
+      "reason": "derivable-from-code"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3131,
+  "lines": 33,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T02:44:37.709Z"
+}
