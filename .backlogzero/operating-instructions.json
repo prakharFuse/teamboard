@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "035cea2dc540107cb66d0e298b5af585ddaf422b2756467ea684dba2c1514908",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1308,
+      "sha256": "033b3dc4dd558d80a252f681f6c2b0332e822896d0ee7379dca5a067fffd2c96"
+    },
+    {
+      "path": "knowledge/fixture-notes.md",
+      "chars": 2127,
+      "sha256": "2cd54b9839c7a005e9a9ee9b0184dcf2fd271c2f0a599545fa4ef372d3fc1bf5"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1175,
+      "sha256": "2e0e784ffbda3e0e64f3fff506037da43ec17530200906363aab2269bb441ee7"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1427,
+      "sha256": "b604ed7549a08a4f16610d3793d00295e2f73ae02b1ed55391a1029cd0302745"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# FIXTURE NOTE Comments — Read Before \"Cleaning Up\" Anything",
+      "sources": [
+        "knowledge/fixture-notes.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full module graph / mermaid flowchart of what imports what",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js is a module-level Map, so state is process-lifetime only and shared globally",
+      "reason": "redundant-with",
+      "detail": "Covered by the fixture-note bullet on src/store.js being a global Map-backed store with no per-tenant dimension"
+    },
+    {
+      "source": "conventions/code-style.md",
+      "rule": "Only logger.js has a test file today; index.js, api-client.js, and store.js are currently untested",
+      "reason": "derivable-from-code"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3210,
+  "lines": 29,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T14:16:08.553Z"
+}
