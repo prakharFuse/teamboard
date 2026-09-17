@@ -9,6 +9,7 @@
 import { logger, setLevel } from './logger.js';
 import { ApiClient } from './api-client.js';
 import { allSettings, getSetting } from './store.js';
+import { startServer } from './server.js';
 
 function parseArgs(argv) {
   const opts = { command: 'status', verbose: false };
@@ -30,6 +31,7 @@ function printHelp() {
       'Commands:',
       '  status     show current settings',
       '  tasks      list the first page of tasks',
+      '  serve      start the members API server',
       '',
       'Options:',
       '  --verbose  include debug output',
@@ -58,6 +60,15 @@ async function main() {
     logger.debug('listing tasks', { retention: getSetting('retention.days') });
     const page = await client.listTasks(1);
     logger.info(`fetched ${Array.isArray(page) ? page.length : 0} task(s)`);
+    return;
+  }
+
+  if (opts.command === 'serve') {
+    if (!process.env.TEAMBOARD_API_TOKEN) {
+      logger.warn('TEAMBOARD_API_TOKEN is not set; members API requests will be unauthorized');
+    }
+    const server = await startServer();
+    logger.info(`members API listening on port ${server.address().port}`);
     return;
   }
 
