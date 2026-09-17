@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "78acb9c821b8aafd0fc470e77642a2222bca6b1d782ff3679ad9137576d99721",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1163,
+      "sha256": "574ce81446d984736e0a413bbf489c2ab35cd5c046a60f6ea3a65bed0d8ca56d"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1799,
+      "sha256": "5abe080ede517360fae19770961c89300ea8aee640a7fa44bd8640f3c03e62cd"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1094,
+      "sha256": "180699fa30770e881d2a1b017286d18b5d0b4795274cf11fd2f5eac641009c50"
+    },
+    {
+      "path": "conventions/fixture-notes.md",
+      "chars": 1212,
+      "sha256": "8b4c7fd4d9c405064b61fccecf63309daaa7df4e89bb2b01fe4cd3616559fee3"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Teamboard — Operating Instructions",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## What this repo is",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "## FIXTURE NOTE convention — read before \"fixing\" anything",
+      "sources": [
+        "conventions/fixture-notes.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Code style and testing",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "## Non-obvious runtime behavior",
+      "sources": [
+        "knowledge/architecture.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full mermaid module-wiring diagram (CLI/Logger/Store/ApiClient/Upstream graph)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Per-file bullet list describing what each of the four src files does (index.js, logger.js, store.js, api-client.js)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Reference to the README's tiers.easy/medium/complex naming scheme for the full list of intentional issues",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/code-style.md",
+      "rule": "package.json has zero dependencies/devDependencies",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/code-style.md",
+      "rule": "Only logger.js currently has a test file; index.js, api-client.js, store.js have none",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "conventions/fixture-notes.md",
+      "rule": "Exhaustive per-file mapping restated with full detail (kept as condensed summary instead)",
+      "reason": "redundant-with"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2930,
+  "lines": 24,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T03:18:43.143Z"
+}
