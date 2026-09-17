@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "e0ef03490f7438d4cec586dc31842f097cd457f95019bb3a6e93e9fe3742dc2f",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1060,
+      "sha256": "e1a1fbc2867dfc09cfa9411c1d139d825e8594628de2cb663252f2eab71a576f"
+    },
+    {
+      "path": "knowledge/fixture-notes.md",
+      "chars": 1840,
+      "sha256": "8f5b2c90c7124ea0ee022fa0cf25060c284e3e70a1d4c6588652c6e3d0340d38"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 2376,
+      "sha256": "7b7d209d4276e7f1a3b959009dca4463f250d7aff136863bc1a6017ca3a2853b"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 878,
+      "sha256": "8add0ec732a9117bedeaba2e49b9f29c8d1cff8a9c8cdc391b70204c530670e0"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 937,
+      "sha256": "5899c24a0e0d41aa32df0c2e7de2cef3e49e84132cab6415413bba2cc3b9de59"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Purpose",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Fixture Notes — Do Not \"Clean Up\" Bait",
+      "sources": [
+        "knowledge/fixture-notes.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/coding-style.md"
+      ]
+    },
+    {
+      "heading": "# Commands",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Gotchas",
+      "sources": [
+        "knowledge/architecture.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full mermaid flowchart of src/index.js -> logger/api-client/store wiring",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "\"What actually exists\" bullet list of each src file and its role (index.js commands, logger.js levels, api-client.js retry/backoff, store.js Map+DEFAULTS)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-notes.md",
+      "rule": "Full per-file bait table (README typo, logger.js --quiet, index.js parseArgs, logger.test.js coverage gap, api-client.js hardcoded config, store.js global store) mapped to tiers.easy/medium/complex",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "\"Only one test file exists today ... no test coverage for src/index.js, src/api-client.js, or src/store.js\"",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Second statement of the divergence detail (pre-built repository index describes client/src/App.tsx, server/src/routes/members.ts, server/src/db.ts using node:sqlite)",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "conventions/coding-style.md",
+      "rule": "\"followed in most files by a second FIXTURE NOTE: block\"",
+      "reason": "redundant-with"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3063,
+  "lines": 40,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T03:10:25.330Z"
+}
