@@ -27,6 +27,18 @@ npm install
 npm start -- --help
 ```
 
+## Members API
+
+`npm start -- serve` starts an HTTP server (loopback, port 3000 by default)
+exposing a members API:
+
+- `GET /api/members/count` → `200 { "count": <number> }`, where `<number>` is
+  the count of active members (`is_active = 1`).
+
+Requests must include `Authorization: Bearer <token>`, where `<token>` matches
+the `TEAMBOARD_API_TOKEN` environment variable. Requests with a missing or
+incorrect token receive `401 { "error": "unauthorized" }`.
+
 ## Configuration
 
 Environment variables are read in `src/config.ts`. See that file for the
