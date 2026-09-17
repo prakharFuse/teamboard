@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "ab6e8e87af3a083c391861394f8e9bd176991f578fa1a5c998653f2c4407c63e",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1032,
+      "sha256": "669bac3b8c3297d02b3928759718133fd8a2ce92d9bd8a27d8efabde50848c28"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 1893,
+      "sha256": "b78ed0022c215c3b19f1cf8d7f818e275f63154ef878a8ffead82d0bb1866cde"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1810,
+      "sha256": "06ef6581aeb9c94e095a8b1212396eb499e2142f182ccee66dabc7b9a9a751e9"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1007,
+      "sha256": "100aa8e51e8db418bb32435ccaf809bf0d0ce2db8f76d4002583b6f149b33083"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 888,
+      "sha256": "9fad0583cb4af4c0ec5cad93c1dd82f20aeccd301b384477108aef3ccd858875"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Teamboard Agent Instructions",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## What This Repo Is",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Commands",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "## Do Not \"Clean Up\" These Intentional Quirks",
+      "sources": [
+        "knowledge/fixture-gotchas.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Code Style",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "## Testing",
+      "sources": [
+        "conventions/testing.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Mermaid module call-graph diagram (CLI -> Logger/Store/Api -> Remote)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "File-by-file description of src/index.js, src/logger.js, src/api-client.js, src/store.js, test/logger.test.js",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/code-style.md",
+      "rule": "Top-of-file JSDoc-style block comments describe the module's purpose",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "Exact magic-number values: retry count 3, timeout 15000, backoff 250 * 2 ** attempt, page size 50",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Specific command list location 'src/index.js:23'",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "Table format mapping each quirk to its fixture tier name (tiers.easy/medium/complex)",
+      "reason": "not-always-applicable"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3098,
+  "lines": 31,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T13:42:40.562Z"
+}
