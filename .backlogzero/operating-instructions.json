@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "7f27ac863f4948942eb59d2f047e5ab4a666b9c65e0aa4cbe5a8e43504fb87bf",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1225,
+      "sha256": "6cb0c266762ca8104bf0724b19d099e341f0e3ff3c78ee6b7c3fd2e3c07edf7d"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 2631,
+      "sha256": "7131dc46bb9455ca43cc7fdbac86ee33b1ee820259357333cd805db31f937926"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1385,
+      "sha256": "43bca22709863f89ed1bf7b503a4637d6174cc69e21e8eb4bd61001e8cb02f4a"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 1200,
+      "sha256": "62b83632793f65748205bcfc6f5192b21d2e3c4d1a4dcf63ea5dc113d1db8a92"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "## Intentional rough edges — do not fix opportunistically",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Commands",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid module graph (CLI -> Logger/Store/Client -> Upstream)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "package.json has \"main\": \"src/index.js\"",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "there's no dependency-injection or config layer between these modules; index.js wires them by hand in main()",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "file-by-file list of src/index.js, src/logger.js, src/api-client.js, src/store.js, test/logger.test.js with descriptions",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "invoked via npm test → node --test (mechanism detail)",
+      "reason": "redundant-with",
+      "detail": "Run tests: npm test (plain node --test, no test framework dependency)"
+    }
+  ],
+  "conflicts": [],
+  "chars": 4043,
+  "lines": 38,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T14:05:34.460Z"
+}
