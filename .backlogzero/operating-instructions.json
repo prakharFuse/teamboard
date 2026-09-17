@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "943b35b1ed415e98702efc3389f08883659f46c06b8a9a9cfa11eae1ef7f9a06",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1290,
+      "sha256": "7c245c4dd9861851c31723c2c9b08c36ee4e040496a1ea11f0cae4c59e1bac1d"
+    },
+    {
+      "path": "knowledge/gotchas.md",
+      "chars": 2089,
+      "sha256": "3c0a55bb85df892f4a621ce0c5c77848116b4b6ceba1732793fab47b750bda8c"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1881,
+      "sha256": "f41e6603b49344a2b7f0990a8c2cc42c3d7cf4d5472c8bf6abd6cb9b82c1764c"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 1490,
+      "sha256": "a9c7c015cd06f2b667a1958c6d5015709f1d0e532f3b181565d757f7d738865f"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Do Not \"Fix\" These Without Being Asked",
+      "sources": [
+        "knowledge/gotchas.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Known Non-Obvious Behavior",
+      "sources": [
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid flowchart of module dependencies (CLI -> Logger/Store/ApiClient -> external API)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "file-by-file list of src/index.js, src/logger.js, src/store.js, src/api-client.js purposes",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "seeding mechanism via `pnpm test:journey provision-repo` reconciled against tests/journeys/seed/journey-repo/ in the suite's own repo",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/gotchas.md",
+      "rule": "each gotcha is marked inline with a `FIXTURE NOTE` comment",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "full code example of test/logger.test.js pattern (imports, setLevel test blocks)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "there is currently only test/logger.test.js; no tests for store.js, api-client.js, or index.js",
+      "reason": "derivable-from-code"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2932,
+  "lines": 29,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T17:07:42.201Z"
+}
