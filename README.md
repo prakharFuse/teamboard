@@ -1,60 +1,33 @@
-# TeamBoard
+# Teambaord
 
-Internal team directory for managing team member profiles, departments, and HR reporting.
+A small task-tracking service used as the journey suite's fixture repository.
 
-## Tech stack
+> The heading above is misspelled ON PURPOSE. The `tiers.easy` fixture issue
+> (`helpers/journey-issues.ts`) asks an agent to correct "Teambaord" →
+> "Teamboard", so this typo is the fixture's subject. If you fix it by hand the
+> easy-tier journey has nothing to do and its plan becomes vacuous. Leave it.
 
-- **Server:** Node.js, Express, TypeScript, SQLite (`node:sqlite`)
-- **Client:** React, TypeScript, Vite
-- **Runtime:** Node.js >= 22.5 (required for `node:sqlite`)
+## What this is
 
-## Getting started
+Fixture content, not a product. It exists so the journeys that resolve a real
+Jira ticket have a real repository to plan against, clone, branch and open a
+pull request on. It is deliberately small but not empty: several fixtures ask an
+agent to *audit* the code (centralise hardcoded config) or *extend* it (add a
+Slack notifier, add a `--quiet` flag), and an empty repo makes those tickets
+unanswerable — the assessment still succeeds and the plan says nothing.
+
+Re-seeded by `pnpm test:journey provision-repo` (and automatically by the
+`provision` setup project). Content is reconciled against
+`tests/journeys/seed/journey-repo/`, so edit the pack, never the remote.
+
+## Usage
 
 ```bash
-pnpm install
-pnpm build
-pnpm dev
+npm install
+npm start -- --help
 ```
 
-Server runs on port 4060, client on port 5173 with API proxy to the server.
+## Configuration
 
-## API
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/members | List active team members |
-| POST | /api/members | Add a team member |
-| GET | /api/members/:id | Get member by ID |
-| PATCH | /api/members/:id | Update member fields |
-| DELETE | /api/members/:id | Remove a team member |
-| GET | /api/members/export | Download CSV (HR integration) |
-| GET | /api/members/stats | Department statistics |
-
-## Project structure
-
-```
-teamboard/
-├── server/src/
-│   ├── index.ts           — Express app
-│   ├── db.ts              — SQLite init + seed data
-│   └── routes/
-│       └── members.ts     — Member CRUD + export
-├── client/src/
-│   ├── App.tsx            — Main UI
-│   ├── main.tsx           — Entry point
-│   └── styles.css         — Styles
-└── data/                  — SQLite database (gitignored)
-```
-
-## Database
-
-SQLite file at `data/team.db`, auto-created on first run with sample data (8 team members across departments).
-
-## Scripts
-
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Run server + client concurrently |
-| `pnpm build` | Compile server TypeScript |
-| `pnpm typecheck` | Type-check both server and client |
-| `pnpm start` | Run compiled server only |
+Environment variables are read in `src/config.ts`. See that file for the
+current list.
