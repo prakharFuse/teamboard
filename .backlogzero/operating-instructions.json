@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "e3cab28657ad05139f2196d44bb9077588763226a4ec7996a9f8ed2e352ea9a4",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1098,
+      "sha256": "182db542ac5c57e0fece0c4a2f2e6673910a3deff3e8d6c03d454ea00d08ddcd"
+    },
+    {
+      "path": "knowledge/gotchas.md",
+      "chars": 1709,
+      "sha256": "283a58c585d6ca9cb7bad62baa746431e4a09fef001f3805c88fbc2aca95e071"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1493,
+      "sha256": "cd9f03024c72706572f695380a3c595d3df9e7813a2fc6e7c103720eab4fdffa"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1023,
+      "sha256": "21410e857c3eadd2e526a04afa5ec2c8ec58505ff91254db344752238dd37cda"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 884,
+      "sha256": "e2a45e7723f835c7a11b636eebefaf0e6760ff8fd19976036ccefb2be849c2aa"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/gotchas.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Fixture Gotchas — Don't Fix Speculatively",
+      "sources": [
+        "knowledge/gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Mermaid module dependency diagram and notes on ApiClient/Store/Logger edges",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "File-by-file layout list (src/index.js, src/logger.js, src/api-client.js, src/store.js, test/logger.test.js descriptions)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "'test/logger.test.js' is described as 'the only test file'",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/gotchas.md",
+      "rule": "'See [[overview]] for the module layout these notes refer to.'",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "conventions/code-style.md",
+      "rule": "'see [[gotchas]] before cleaning up any of those' cross-reference on FIXTURE NOTE comments",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "'Only src/logger.js has coverage today. There is no coverage tooling configured (no nyc/c8 in package.json).'",
+      "reason": "not-always-applicable"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2770,
+  "lines": 27,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T12:41:11.878Z"
+}
