@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "df195d7cc1174804d90004d064090a086f142e966e56d11f29557a6e53de92fa",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1038,
+      "sha256": "43d87c63e046c663eb3abafe3a77d8ebdc7f171d1a5c3b217d48f19f88788b04"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 1840,
+      "sha256": "e1be619fae4029ed8f3b0cfe01eb7d6fb5d48311c5794710267d21079559575c"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 2113,
+      "sha256": "1e23d2108b41771529e82259d1873543cf9ebe15043bdd5295343575b281ae14"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1121,
+      "sha256": "41c7e2e8abf8f09cd7e867c7abd78c1e7a2bf2eb05c131ade479426e770e718e"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 780,
+      "sha256": "fb620c9d7b01f9affcd202cff6dc871242d72256bc5adac268a9483d0020be90"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# teamboard — Operating Instructions",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Project Nature",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Fixture Gotchas — Do Not \"Clean Up\"",
+      "sources": [
+        "knowledge/fixture-gotchas.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Code Style",
+      "sources": [
+        "conventions/code-style.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "## Testing",
+      "sources": [
+        "conventions/testing.md",
+        "knowledge/architecture.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Module import graph / mermaid flowchart of CLI -> Logger/Store/Client -> Upstream",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Store and Client do not import each other",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "index.js wires getSetting('retention.days') into a debug log line before calling client.listTasks, but that value isn't passed into the request — informational only (src/index.js:58-59)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "test/logger.test.js imports only src/logger.js directly; there is no test coverage for index.js, api-client.js, or store.js yet",
+      "reason": "redundant-with",
+      "detail": "Testing section already states only logger.js has coverage today"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Runtime shape file-by-file list (src/index.js entrypoint/parseArgs, src/logger.js levelled logger, src/store.js in-memory settings Map, src/api-client.js fetch-based HTTP client)",
+      "reason": "derivable-from-code"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3714,
+  "lines": 34,
+  "overTarget": false,
+  "generatedAt": "2026-09-17T13:24:15.925Z"
+}
