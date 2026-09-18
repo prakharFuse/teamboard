@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "812a25563ed27052a23fbb78ea7201495f098d2fd17ebce89f35473edd4c7952",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1259,
+      "sha256": "ba6b78504ae5fa39351ffd620ec1a46d49e9d1a795e1ed147999253d5db34968"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 1547,
+      "sha256": "5da1482476954b4bfa5c63be1a05ba2f9abba404ffd58a175fdfe5556f679c10"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1961,
+      "sha256": "bac835fcf1c815ce86450e716bfc4a8e2ee753d002461f5d73cd1ae6dce94951"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1215,
+      "sha256": "8618fa2df7846938bf63c407abd756e2db3494bdeaa09416692de44b33616a33"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 1237,
+      "sha256": "4a4f985ef86e56a4e6340858e7981f4baa2c7245bc407c7566a06dc93c78fdaf"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Context",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "# Planted Issues — Leave Alone Unless That's the Ticket",
+      "sources": [
+        "knowledge/fixture-gotchas.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Architecture Gotchas",
+      "sources": [
+        "knowledge/architecture.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid flowchart of module call graph (CLI -> Logger/Store/ApiClient -> Upstream)",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "api-client.js imports only logger.js, not store.js; index.js reads retention.days but listTasks(1) ignores it",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "file-by-file module map (src/index.js, src/logger.js, src/store.js, src/api-client.js, test/logger.test.js descriptions)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "There is no knowledge/data-model.md page because there is no schema/migration/ORM",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "See [[overview]] for the broader fixture-repo framing",
+      "reason": "scoped-not-global"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "full code example of test/logger.test.js pattern",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "package.json has zero devDependencies",
+      "reason": "derivable-from-code"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3932,
+  "lines": 33,
+  "overTarget": false,
+  "generatedAt": "2026-09-18T10:46:07.086Z"
+}

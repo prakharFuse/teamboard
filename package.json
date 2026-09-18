@@ -1,6 +1,6 @@
 {
   "name": "teamboard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Journey suite fixture: a small task-tracking service.",
   "type": "module",
@@ -8,6 +8,11 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "node --test"
+  },
+  "pnpm": {
+    "overrides": {
+      "path-to-regexp": "0.1.13"
+    }
   },
   "license": "UNLICENSED"
 }
