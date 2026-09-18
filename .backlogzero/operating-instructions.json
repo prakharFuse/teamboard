@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "0f24bb3af2aa112973d4f8cac5254d201ccc0c94f4e20af781c9d6587e9196c6",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1045,
+      "sha256": "260f2260f42dc3b369d69a09a5dfed8d7e8673c372c35719e9a892683cb98cf3"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 1985,
+      "sha256": "10a520d1d9f1cdfc3aef5d66c97bf1444367a73f80b0c0c7af4d733bc88dc55c"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1455,
+      "sha256": "a46bdfd011d7210d702f3d5e6dc8522a1dbc529792e41c433f90f599c0bc9524"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 879,
+      "sha256": "5d1b5b3adf7f3dea61df14bfdf10f359dd9181ce1fae9ca85c7e48f80cda1a41"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Teamboard — Agent Operating Instructions",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## What this repo is",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "## Running and testing",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "## Don't fix these unless the task explicitly asks for it",
+      "sources": [
+        "knowledge/fixture-gotchas.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Stale documentation to ignore",
+      "sources": [
+        "knowledge/fixture-gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid flowchart of module call graph (index.js -> logger/store/api-client -> upstream)",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "`index.js` is the only file that imports the other three; `logger.js` and `store.js` never import each other",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "`ApiClient.request()` retries up to 3 times against the upstream URL with exponential backoff, logging each retry via `logger.warn`; upstream host is a hardcoded placeholder",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "CLI commands: `status` (print settings), `tasks` (fetch page 1), `help`; `--verbose` flips logger to debug level",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Module map listing index.js/logger.js/api-client.js/store.js roles",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "exact hardcoded values: retry count 3, timeout 15000, backoff base 250 * 2 ** attempt, page size 50, default log level 'info'",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "the --quiet ticket also expects 'one unit test' landing in test/logger.test.js",
+      "reason": "not-always-applicable"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2572,
+  "lines": 30,
+  "overTarget": false,
+  "generatedAt": "2026-09-18T09:14:27.822Z"
+}
