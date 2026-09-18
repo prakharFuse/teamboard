@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "50486976c5d11afec4bd466f3ec15a33ea193399ca24e873530358b896bdb483",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 3269,
+      "sha256": "46f2bdb22962457cbd62f8922d8eba47e376d3bf6828f7a03eda34de5c24ddd4"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 470,
+      "sha256": "20bad04cd9f69c38c8a9c8ba73787fe6335b03531da40ee9e88d5147b7f78b39"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 2968,
+      "sha256": "f509452682d8b6e8e7a6c2d1c8bbb534f9ee52ca9ba2e1aba424ed7607591b56"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 490,
+      "sha256": "1929e21144f905087d07fef68dfbc2cc1383c0b55860d300c10056a1f0ccd0d9"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 692,
+      "sha256": "4c20d0f6995aa23a814e20e8edeaa90d5ebbeaff09a6dbb8ffccbbb0cc27bd14"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Project Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Environment & Config",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Coding Style",
+      "sources": [
+        "conventions/coding-style.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Known Gotchas",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Fixture Notes",
+      "sources": [
+        "knowledge/fixture-gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full mermaid module call graph / data flow diagram",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient, BambooHrClient, and SsoClient are all instantiated fresh in index.js per command invocation; none is a singleton",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js's settings map and members.js's member map are both module-level singletons that never reference each other",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Full file-by-file description of each of the eight src/ files",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "List of CLI commands: status, tasks, help, members:import, members:deactivate, members:reconcile-sso",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "test/ has five files: logger.test.js, bamboohr-client.test.js, sso-client.test.js, members.test.js, member-lifecycle.test.js",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "There is no client/server split and no database as of commit 605e18e, which removed server/tsconfig.json",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "Specific list of four named files (bamboohr-client.js, member-lifecycle.js, members.js, sso-client.js) that lack a FIXTURE NOTE comment",
+      "reason": "derivable-from-code"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2845,
+  "lines": 33,
+  "overTarget": false,
+  "generatedAt": "2026-09-18T08:52:13.526Z"
+}
