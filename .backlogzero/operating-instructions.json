@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "sourceHash": "0f24bb3af2aa112973d4f8cac5254d201ccc0c94f4e20af781c9d6587e9196c6",
+  "sourceHash": "23dec1312c9dcd668cf28479cd4ad36691d4c2bfd96581f1a0c50e75434fd836",
   "promptVersion": 2,
   "sources": [
     {
@@ -10,8 +10,8 @@
     },
     {
       "path": "knowledge/fixture-gotchas.md",
-      "chars": 1985,
-      "sha256": "10a520d1d9f1cdfc3aef5d66c97bf1444367a73f80b0c0c7af4d733bc88dc55c"
+      "chars": 506,
+      "sha256": "19d3c1d046d28304e5de754a8da393b5f273a577fd92d8ff9f06140b472d4e66"
     },
     {
       "path": "knowledge/overview.md",
@@ -26,80 +26,75 @@
   ],
   "provenance": [
     {
-      "heading": "# Teamboard — Agent Operating Instructions",
+      "heading": "# Repository Overview",
       "sources": [
-        "knowledge/overview.md"
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
       ]
     },
     {
-      "heading": "## What this repo is",
+      "heading": "## Commands",
       "sources": [
         "knowledge/overview.md",
-        "knowledge/architecture.md",
-        "knowledge/fixture-gotchas.md"
+        "knowledge/architecture.md"
       ]
     },
     {
-      "heading": "## Running and testing",
+      "heading": "## Intentional Rough Edges — Do Not \"Clean Up\"",
       "sources": [
         "knowledge/overview.md",
+        "knowledge/fixture-gotchas.md",
         "conventions/testing.md"
       ]
     },
     {
-      "heading": "## Don't fix these unless the task explicitly asks for it",
+      "heading": "## Testing Conventions",
       "sources": [
-        "knowledge/fixture-gotchas.md",
-        "knowledge/overview.md"
-      ]
-    },
-    {
-      "heading": "## Stale documentation to ignore",
-      "sources": [
-        "knowledge/fixture-gotchas.md"
+        "conventions/testing.md"
       ]
     }
   ],
   "drops": [
     {
       "source": "knowledge/architecture.md",
-      "rule": "mermaid flowchart of module call graph (index.js -> logger/store/api-client -> upstream)",
-      "reason": "not-always-applicable"
-    },
-    {
-      "source": "knowledge/architecture.md",
-      "rule": "`index.js` is the only file that imports the other three; `logger.js` and `store.js` never import each other",
+      "rule": "mermaid flowchart of the module call graph (CLI -> Logger/Store/ApiClient -> Upstream)",
       "reason": "derivable-from-code"
     },
     {
       "source": "knowledge/architecture.md",
-      "rule": "`ApiClient.request()` retries up to 3 times against the upstream URL with exponential backoff, logging each retry via `logger.warn`; upstream host is a hardcoded placeholder",
+      "rule": "\"index.js is the only file that imports the other three; logger.js and store.js never import each other\"",
       "reason": "derivable-from-code"
     },
     {
       "source": "knowledge/overview.md",
-      "rule": "CLI commands: `status` (print settings), `tasks` (fetch page 1), `help`; `--verbose` flips logger to debug level",
+      "rule": "Module map listing src/index.js, src/logger.js, src/api-client.js, src/store.js with one-line descriptions each",
       "reason": "derivable-from-code"
     },
     {
       "source": "knowledge/overview.md",
-      "rule": "Module map listing index.js/logger.js/api-client.js/store.js roles",
+      "rule": "\"status (print current settings via src/store.js), tasks (fetch page 1 via src/api-client.js)\" command implementation detail",
       "reason": "derivable-from-code"
     },
     {
-      "source": "knowledge/fixture-gotchas.md",
-      "rule": "exact hardcoded values: retry count 3, timeout 15000, backoff base 250 * 2 ** attempt, page size 50, default log level 'info'",
-      "reason": "derivable-from-code"
-    },
-    {
-      "source": "knowledge/fixture-gotchas.md",
-      "rule": "the --quiet ticket also expects 'one unit test' landing in test/logger.test.js",
+      "source": "knowledge/overview.md",
+      "rule": "\"See ../../README.md for the full framing\" pointer to README",
       "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Cross-reference links to [[architecture]] and [[fixture-gotchas]] wiki pages",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "Cross-reference link to [[fixture-gotchas]] explaining why coverage is sparse",
+      "detail": "sparse-coverage rule already stated directly in the Intentional Rough Edges section",
+      "reason": "redundant-with"
     }
   ],
   "conflicts": [],
-  "chars": 2572,
-  "lines": 30,
+  "chars": 2541,
+  "lines": 27,
   "overTarget": false,
-  "generatedAt": "2026-09-18T09:14:27.822Z"
+  "generatedAt": "2026-09-18T09:17:08.701Z"
 }

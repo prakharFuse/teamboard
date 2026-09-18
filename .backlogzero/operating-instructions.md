@@ -1,29 +1,26 @@
-# Teamboard — Agent Operating Instructions
+# Repository Overview
 
-## What this repo is
+- Teamboard is a fixture repository, not a real product — it exists so an external "journey suite" can clone it, branch, and open PRs against it while resolving simulated Jira tickets.
+- It is a single-process CLI: no server, no database, no client/server split. Everything runs synchronously in one `node` invocation. Ignore any assumption of `client/`, `server/`, SQLite, or Express — those belong to a different project, not this repo.
+- Zero real npm dependencies: `package.json` has no `dependencies`/`devDependencies` keys and there is no lockfile. Everything relies on Node built-ins (`fetch`, `node:test`, `node:assert`).
 
-- Teamboard is a **fixture repository**, not a real product. It exists so an external "journey suite" can clone it, branch it, and open PRs against it while resolving simulated Jira tickets.
-- It is a single-process Node CLI with **zero npm dependencies** (no `dependencies` or `devDependencies` in `package.json`). Everything relies on Node built-ins (`fetch`, `node:test`, `node:assert`).
-- There is no server, no database, no client/server split, and no routing layer. If a repository map or prior context describes `client/`, `server/`, Express routes, or SQLite, that description is stale or from a different project — trust the actual working tree instead.
+## Commands
 
-## Running and testing
+- `npm start -- --help` runs `node src/index.js --help`.
+- `npm test` runs `node --test`, which discovers `test/**/*.test.js`.
+- CLI subcommands are `status`, `tasks`, and `help`. `--verbose` sets the logger to debug level; there is no `--quiet` flag.
+- `ApiClient.request()` retries up to 3 times against the upstream API with exponential backoff, logging each retry via `logger.warn`. The upstream host (`api.teamboard.example.com`) is a hardcoded placeholder — no real server exists or is expected behind it.
 
-- Run the CLI: `npm start -- --help` (equivalent to `node src/index.js --help`).
-- Run tests: `npm test` (equivalent to `node --test`, which auto-discovers `test/**/*.test.js`).
-- Tests use Node's built-in `node:test` + `node:assert/strict` — do not add Jest/Mocha/Vitest or any test framework dependency.
-- One test file per source module, named `<module>.test.js` under `test/`, importing the module under test via a relative `../src/...` path.
-- Keep each `test(...)` block scoped to one behavior; use separate `assert.doesNotThrow` / `assert.throws` tests for success/failure cases rather than combining both into one block.
-- Coverage is intentionally sparse (`api-client.js` and `store.js` currently have no tests) — this is by design, not an oversight to backfill unless a task specifically asks for it.
+## Intentional Rough Edges — Do Not "Clean Up"
 
-## Don't fix these unless the task explicitly asks for it
+- IMPORTANT: This repo intentionally contains rough edges that serve as fixture subjects for future tickets — do not silently fix, remove, or backfill them unless that is literally the task given.
+- The misspelled README title ("Teambaord") is intentional.
+- The missing `--quiet` CLI flag is an intentional gap, not an oversight.
+- Sparse test coverage (`api-client.js` and `store.js` have no tests) is intentional — these are fixture subjects, not a backlog to fill unprompted.
+- `package.json`'s `pnpm.overrides.path-to-regexp` entries are inert automated security-fix pins for GHSA-37ch-88jc-xwx2 with no real effect, since the repo has no actual dependency tree. Don't treat their presence as evidence of a real dependency graph, and expect similar overrides to reappear for other transitive-dependency CVEs.
 
-This repo deliberately contains rough edges that are the subject of specific fixture tickets elsewhere. Cleaning one up as a side effect of an unrelated change removes that ticket's subject:
+## Testing Conventions
 
-- The README title "Teambaord" is misspelled on purpose.
-- Config values (base URL, region, retry count, request timeout, backoff base, page size in `src/api-client.js`; default log level in `src/logger.js`) are intentionally scattered rather than centralized — leave them scattered unless the task is specifically about centralizing config.
-- `src/index.js` has no `--quiet` flag (only `--verbose`) — don't add one unprompted.
-- `src/store.js` is a global, tenant-less settings store — don't migrate it to a per-tenant schema unless asked.
-
-## Stale documentation to ignore
-
-- README.md claims environment variables are read in `src/config.ts`. That file does not exist, and nothing under `src/` reads `process.env`. Don't point work at `src/config.ts`.
+- Test runner is Node's built-in `node:test` + `node:assert/strict` — no Jest, Mocha, or Vitest.
+- One test file per source module, named `test/<module>.test.js` (e.g. `test/logger.test.js` for `src/logger.js`), importing the module under test via a relative `../src/...` path.
+- Each `test(...)` block should cover exactly one behavior; use separate `assert.doesNotThrow` / `assert.throws` blocks for the success and failure cases rather than combining both into one test.

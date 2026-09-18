@@ -9,3 +9,4 @@
   conventions/testing.md.
 - Recorded a divergence: README.md points to `src/config.ts` for env vars;
   that file doesn't exist and no code reads `process.env`.
+0c2c10ae-deaa-4554-a6dd-af9d59dbe728: added fact to knowledge/fixture-gotchas.md noting the pnpm.overrides path-to-regexp pin in package.json is an inert, recurring automated security-fix artifact with no real dependency behind it
