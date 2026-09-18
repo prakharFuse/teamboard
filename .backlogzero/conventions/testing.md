@@ -3,24 +3,28 @@ name: testing
 description: How tests are written and run in this repo — Node's built-in test runner, no framework
 type: convention
 scope: global
-updated: '2026-09-18'
-captured_sha: 605e18e9f773ad15b3e0009302ccc07b31b620a0
+updated: 2026-09-18 (IONE-959)
+captured_sha: 88dd68751303506f969e7b6a8e78fe17799821e0
 sources:
-  - package.json
-  - test/logger.test.js
+  - test/bamboohr-client.test.js
+  - test/sso-client.test.js
+  - test/members.test.js
+  - test/member-lifecycle.test.js
 sources_sha256:
-  package.json: b0f12c6eb22b4bf7edee1f38c9fca901725565667b3754749d6c6cdf874f0b6c
-  test/logger.test.js: c4eed64e2022370b3212b33c64de4cb744bdacb15b12e8900bcc172a045408fa
+  test/bamboohr-client.test.js: 9da1bf66d7bc10583e982867b104194eb6681cc0eb80d26c152d4da3046c1e25
+  test/member-lifecycle.test.js: 9a1e84a9cef223f1bb821be976014d8cba85d5e6670ee1264bf5c5f477c65e8b
+  test/members.test.js: f066ee740e773bf559ef17057f23fa766f882d7e493119f0313b9a757476decd
+  test/sso-client.test.js: 2c3c751f64660f24e608c1532f0e1eb91bdc15f9ce1b6c93d40bc7587e6e2ea3
 ---
 
-- Tests run via Node's built-in test runner: `"test": "node --test"` in
-  `package.json` (no Jest/Mocha/Vitest). Run with `npm test`.
-- Assertions use `node:assert`'s `strict` import (`import { strict as
-  assert } from 'node:assert'`), not a third-party assertion library.
-- Test files live under `test/` and are named `<module>.test.js`, matching
-  the `src/<module>.js` they cover (currently only `test/logger.test.js` ↔
-  `src/logger.js` — `store.js`, `api-client.js`, and `index.js` have no
-  tests yet).
-- Each behavior gets its own `test(...)` block rather than multiple
-  assertions bundled into one — see `test/logger.test.js`'s two separate
-  tests for the accept/reject cases of `setLevel`.
+- The member-lifecycle feature (`bamboohr-client.js`, `sso-client.js`,
+  `members.js`, `member-lifecycle.js`) is covered by four new test files;
+  `store.js`, `api-client.js`, and `index.js` still have none.
+- `BambooHrClient` and `SsoClient` are tested by injecting a fake `fetchImpl`
+  through the constructor (`new BambooHrClient({ fetchImpl, apiKey })`)
+  rather than mocking the global `fetch` — follow that pattern for new
+  network clients instead of `src/api-client.js`'s untestable direct
+  `fetch` call.
+- `members.js` is a module-level singleton (like `store.js`), so its tests
+  call `resetMembers()` at the start of every `test(...)` block to avoid
+  state leaking between tests.

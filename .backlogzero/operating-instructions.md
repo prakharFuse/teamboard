@@ -1,34 +1,32 @@
-# Repository Overview
+# Project Overview
 
-- This is fixture content for an external journey/test-suite, not a product under active development. It's a small Node CLI (`teamboard`) with no client/server split and no database.
-- Single-process Node CLI. `src/index.js` is the only entrypoint; commands are `status`, `tasks`, `help`.
-- Four files make up the whole app: `src/index.js` (CLI entry), `src/logger.js` (levelled logger), `src/store.js` (in-memory, process-global settings store), `src/api-client.js` (fetch-based HTTP client for a fake upstream task API with hand-rolled retry/backoff).
-- `ApiClient` is instantiated fresh per `tasks` command invocation — it is not a singleton and holds no state beyond `baseUrl`/`region`.
-- `store.js`'s settings map is module-level and process-global — treat it as a singleton for the CLI's lifetime.
-- `logger.js` chooses stdout vs stderr per call based on level (`warn`/`error` → stderr, `debug`/`info` → stdout), not on any config.
-- The README's "Configuration" section pointing to `src/config.ts` is stale: that file does not exist, and no source file reads `process.env` anywhere in the repo. There is currently no environment-variable configuration surface.
+- Single-process Node CLI (`teamboard`), entry point `src/index.js`. No server, no database, no build step, no third-party dependencies.
+- Plain ESM JavaScript throughout — don't introduce TypeScript or a build step.
 
-# Coding Style
+# Environment & Config
 
-- Plain ESM JavaScript (`"type": "module"` in `package.json`) — no TypeScript, no bundler, no transpile step.
-- Use `.js` extensions on relative imports (e.g. `from './logger.js'`).
-- Zero runtime dependencies by design — `package.json` has no `dependencies`/`devDependencies` block. Use platform-native APIs (e.g. global `fetch`/`AbortController`) instead of adding a library like axios.
-- Export plain functions/classes, not default exports (e.g. `export class ApiClient`, `export function getSetting`, `export const logger`).
-- CLI argument parsing (`src/index.js:parseArgs`) is a hand-rolled loop, not a library — follow that pattern for new flags rather than introducing a CLI-parsing dependency.
-- Doc comments are used sparingly. Files with deliberately imperfect code for fixture purposes mark it with a `FIXTURE NOTE:` block comment at the top of the file or inline next to the specific line.
+- There is no centralized config file. The README's claim that env vars are read in `src/config.ts` is stale — that file does not exist. Grep `process.env` under `src/` to find the current set of env vars.
+- `src/bamboohr-client.js` reads `BAMBOOHR_API_KEY` and `src/sso-client.js` reads `SSO_API_TOKEN`, each directly in its own constructor.
 
 # Testing
 
-- Run tests with `npm test` (Node's built-in test runner: `"test": "node --test"`). No Jest/Mocha/Vitest.
-- Use `node:assert`'s strict import (`import { strict as assert } from 'node:assert'`) for assertions, not a third-party assertion library.
-- Test files live under `test/` and are named `<module>.test.js`, matching the `src/<module>.js` they cover.
-- Give each behavior its own `test(...)` block rather than bundling multiple assertions into one test.
+- Run tests with `node --test`. There is no external test framework — don't add one (e.g. Jest/Mocha) or its config.
+- `store.js` and `members.js` are process-global singletons (module-level `Map`s). Tests that touch `members.js` must call `resetMembers()` at the start of every `test(...)` block, or state leaks between tests.
+- Test new HTTP clients by injecting a fake `fetchImpl` into the constructor (e.g. `new BambooHrClient({ fetchImpl, apiKey })`) rather than mocking the global `fetch`.
+- `store.js`, `api-client.js`, and `index.js` currently have no tests — that's a known, accepted gap, not something to silently "complete" as part of an unrelated task.
 
-# Fixture Gotchas — Do Not "Fix" These Opportunistically
+# Coding Style
 
-- IMPORTANT: Every source file carries a `FIXTURE NOTE` identifying a deliberate flaw that is the subject of some other ticket — if asked to do unrelated work in one of these files, do not clean up the flaw as a drive-by, since that silently breaks the other ticket. Only touch these when the task is specifically that ticket.
-- `README.md` heading "Teambaord" is misspelled on purpose (subject of the `tiers.easy` fixture issue) — do not correct it unless a ticket explicitly asks for the rename.
-- `src/api-client.js`'s hardcoded `baseUrl`, `region`, retry count (`3`), timeout (`15000`), backoff base (`250 * 2 ** attempt`), and page size (`per_page=50`) are scattered on purpose for the `tiers.complex` config-centralization fixture — only refactor these if the ticket is specifically about config centralization.
-- `src/logger.js`'s level machinery (`LEVELS`, `currentLevel`) exists so a `--quiet` flag is implementable end-to-end (the `tiers.medium` fixture) — don't remove or restructure it incidentally.
-- `src/store.js`'s global (non-tenant-scoped) settings store is deliberate — the `tiers.complex` fixture asks for a per-tenant migration; keep it global unless that's the ticket.
-- `test/logger.test.js` is a placeholder for the "one unit test" the `--quiet`/`tiers.medium` fixture expects to land here; it currently only tests `setLevel`, not quiet-mode suppression — don't expand it unless doing that ticket.
+- New HTTP clients should accept an injectable `fetchImpl` (default: global `fetch`) and read their credential from `process.env` in the constructor, following `bamboohr-client.js`/`sso-client.js` — not `api-client.js`, which hardcodes a direct global `fetch` call and is intentionally untestable that way.
+- Code that orchestrates multiple clients (like `member-lifecycle.js`) should receive its collaborators (e.g. `client`, `ssoClient`) via constructor/function params from the caller, rather than importing and instantiating concrete classes directly.
+
+# Known Gotchas
+
+- `logger.js` routes `warn`/`error` to stderr and `debug`/`info` to stdout based on level, not config — don't assume all log output goes to stdout.
+- `BambooHrClient` fails fast (no retry) on 401/403 responses, unlike `ApiClient`, which retries with backoff.
+- `SsoClient` treats any 204/empty-body `res.ok` response as success and does not call `res.json()` on it.
+- `deactivateMember` calls `ssoClient.deprovision` synchronously but does not throw on failure — it records `deprovisionPendingSince` on the member instead. Nothing retries that automatically; only the `members:reconcile-sso` CLI command does.
+
+# Fixture Notes
+
+- IMPORTANT: Some files in this repo carry an intentionally preserved flaw — but only when the file literally has a `FIXTURE NOTE` comment. Never assume a file is off-limits for fixes just because a neighboring or similar file is; check for the actual `FIXTURE NOTE` label before treating something as a deliberate imperfection to leave alone.

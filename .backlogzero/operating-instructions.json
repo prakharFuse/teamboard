@@ -1,57 +1,71 @@
 {
   "schemaVersion": 1,
-  "sourceHash": "46147ef3126ce716f94abe86ded0977ab1e0e0f22043a2574bfa9430d84d252c",
+  "sourceHash": "50486976c5d11afec4bd466f3ec15a33ea193399ca24e873530358b896bdb483",
   "promptVersion": 2,
   "sources": [
     {
       "path": "knowledge/architecture.md",
-      "chars": 1312,
-      "sha256": "0d0ccb3836a2fff17b748becb7d0a8a5f14bbd2c8c7569301bd219072f515aaf"
+      "chars": 3269,
+      "sha256": "46f2bdb22962457cbd62f8922d8eba47e376d3bf6828f7a03eda34de5c24ddd4"
     },
     {
       "path": "knowledge/fixture-gotchas.md",
-      "chars": 1910,
-      "sha256": "ee63d839d031558fade7e1db1815507c3185e5f00ee6193e64ec4f1b9930e9f5"
+      "chars": 470,
+      "sha256": "20bad04cd9f69c38c8a9c8ba73787fe6335b03531da40ee9e88d5147b7f78b39"
     },
     {
       "path": "knowledge/overview.md",
-      "chars": 1616,
-      "sha256": "eab3765b2954234767a692a87c19e163925aa8fa5e52c9df4d015c1e11a48dec"
+      "chars": 2968,
+      "sha256": "f509452682d8b6e8e7a6c2d1c8bbb534f9ee52ca9ba2e1aba424ed7607591b56"
     },
     {
       "path": "conventions/coding-style.md",
-      "chars": 1032,
-      "sha256": "5bce4794b24b3639f3345ad15cbd0ac7e7ed0434db541352811b83d4bf58857f"
+      "chars": 490,
+      "sha256": "1929e21144f905087d07fef68dfbc2cc1383c0b55860d300c10056a1f0ccd0d9"
     },
     {
       "path": "conventions/testing.md",
-      "chars": 701,
-      "sha256": "a697f70864d1d8d77dd8069ae1b235cb225ebb08e2a3cf62c31178d3b88350c2"
+      "chars": 692,
+      "sha256": "4c20d0f6995aa23a814e20e8edeaa90d5ebbeaff09a6dbb8ffccbbb0cc27bd14"
     }
   ],
   "provenance": [
     {
-      "heading": "# Repository Overview",
+      "heading": "# Project Overview",
       "sources": [
         "knowledge/overview.md",
         "knowledge/architecture.md"
       ]
     },
     {
-      "heading": "# Coding Style",
+      "heading": "# Environment & Config",
       "sources": [
-        "conventions/coding-style.md",
-        "knowledge/fixture-gotchas.md"
+        "knowledge/overview.md"
       ]
     },
     {
       "heading": "# Testing",
       "sources": [
-        "conventions/testing.md"
+        "conventions/testing.md",
+        "knowledge/overview.md"
       ]
     },
     {
-      "heading": "# Fixture Gotchas — Do Not \"Fix\" These Opportunistically",
+      "heading": "# Coding Style",
+      "sources": [
+        "conventions/coding-style.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Known Gotchas",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Fixture Notes",
       "sources": [
         "knowledge/fixture-gotchas.md"
       ]
@@ -60,56 +74,48 @@
   "drops": [
     {
       "source": "knowledge/architecture.md",
-      "rule": "Full mermaid flowchart of module call graph (CLI -> Logger/Store/ApiClient -> Upstream)",
-      "reason": "not-always-applicable"
+      "rule": "Full mermaid module call graph / data flow diagram",
+      "reason": "derivable-from-code"
     },
     {
       "source": "knowledge/architecture.md",
-      "rule": "ApiClient logs through logger.js via logger.warn() on retry",
+      "rule": "ApiClient, BambooHrClient, and SsoClient are all instantiated fresh in index.js per command invocation; none is a singleton",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js's settings map and members.js's member map are both module-level singletons that never reference each other",
       "reason": "derivable-from-code"
     },
     {
       "source": "knowledge/overview.md",
-      "rule": "File-by-file description list of src/index.js, src/logger.js, src/store.js, src/api-client.js purposes",
+      "rule": "Full file-by-file description of each of the eight src/ files",
       "reason": "derivable-from-code"
     },
     {
       "source": "knowledge/overview.md",
-      "rule": "There is no client/server split and no database as of commit 605e18e; don't assume older client/server context",
-      "reason": "redundant-with"
+      "rule": "List of CLI commands: status, tasks, help, members:import, members:deactivate, members:reconcile-sso",
+      "reason": "derivable-from-code"
     },
     {
-      "source": "knowledge/fixture-gotchas.md",
-      "rule": "Reference to ../../README.md for repo purpose and re-seeding process",
+      "source": "knowledge/overview.md",
+      "rule": "test/ has five files: logger.test.js, bamboohr-client.test.js, sso-client.test.js, members.test.js, member-lifecycle.test.js",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "There is no client/server split and no database as of commit 605e18e, which removed server/tsconfig.json",
       "reason": "not-always-applicable"
     },
     {
-      "source": "conventions/testing.md",
-      "rule": "Currently only test/logger.test.js exists; store.js, api-client.js, index.js have no tests yet",
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "Specific list of four named files (bamboohr-client.js, member-lifecycle.js, members.js, sso-client.js) that lack a FIXTURE NOTE comment",
       "reason": "derivable-from-code"
-    },
-    {
-      "source": "README.md",
-      "rule": "Re-seeded by pnpm test:journey provision-repo; content reconciled against tests/journeys/seed/journey-repo/, edit the pack never the remote",
-      "reason": "scoped-not-global"
     }
   ],
-  "conflicts": [
-    {
-      "sources": [
-        "README.md",
-        "knowledge/overview.md"
-      ],
-      "sides": [
-        "README.md states environment variables are read in src/config.ts",
-        "knowledge/overview.md states src/config.ts does not exist and no env vars are read anywhere in the repo"
-      ],
-      "chose": "src/config.ts does not exist; no env-var configuration surface currently exists",
-      "basis": "code-verified exploration finding overrides stale README documentation"
-    }
-  ],
-  "chars": 4061,
-  "lines": 35,
+  "conflicts": [],
+  "chars": 2845,
+  "lines": 33,
   "overTarget": false,
-  "generatedAt": "2026-09-18T08:34:38.834Z"
+  "generatedAt": "2026-09-18T08:52:13.526Z"
 }
