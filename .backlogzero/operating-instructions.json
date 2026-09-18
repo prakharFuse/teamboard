@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "46147ef3126ce716f94abe86ded0977ab1e0e0f22043a2574bfa9430d84d252c",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1312,
+      "sha256": "0d0ccb3836a2fff17b748becb7d0a8a5f14bbd2c8c7569301bd219072f515aaf"
+    },
+    {
+      "path": "knowledge/fixture-gotchas.md",
+      "chars": 1910,
+      "sha256": "ee63d839d031558fade7e1db1815507c3185e5f00ee6193e64ec4f1b9930e9f5"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1616,
+      "sha256": "eab3765b2954234767a692a87c19e163925aa8fa5e52c9df4d015c1e11a48dec"
+    },
+    {
+      "path": "conventions/coding-style.md",
+      "chars": 1032,
+      "sha256": "5bce4794b24b3639f3345ad15cbd0ac7e7ed0434db541352811b83d4bf58857f"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 701,
+      "sha256": "a697f70864d1d8d77dd8069ae1b235cb225ebb08e2a3cf62c31178d3b88350c2"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Coding Style",
+      "sources": [
+        "conventions/coding-style.md",
+        "knowledge/fixture-gotchas.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Fixture Gotchas — Do Not \"Fix\" These Opportunistically",
+      "sources": [
+        "knowledge/fixture-gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full mermaid flowchart of module call graph (CLI -> Logger/Store/ApiClient -> Upstream)",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient logs through logger.js via logger.warn() on retry",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "File-by-file description list of src/index.js, src/logger.js, src/store.js, src/api-client.js purposes",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "There is no client/server split and no database as of commit 605e18e; don't assume older client/server context",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "knowledge/fixture-gotchas.md",
+      "rule": "Reference to ../../README.md for repo purpose and re-seeding process",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "Currently only test/logger.test.js exists; store.js, api-client.js, index.js have no tests yet",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "README.md",
+      "rule": "Re-seeded by pnpm test:journey provision-repo; content reconciled against tests/journeys/seed/journey-repo/, edit the pack never the remote",
+      "reason": "scoped-not-global"
+    }
+  ],
+  "conflicts": [
+    {
+      "sources": [
+        "README.md",
+        "knowledge/overview.md"
+      ],
+      "sides": [
+        "README.md states environment variables are read in src/config.ts",
+        "knowledge/overview.md states src/config.ts does not exist and no env vars are read anywhere in the repo"
+      ],
+      "chose": "src/config.ts does not exist; no env-var configuration surface currently exists",
+      "basis": "code-verified exploration finding overrides stale README documentation"
+    }
+  ],
+  "chars": 4061,
+  "lines": 35,
+  "overTarget": false,
+  "generatedAt": "2026-09-18T08:34:38.834Z"
+}
