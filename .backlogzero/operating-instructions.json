@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "989b603095b69b9d685f8e373d88e74f457e657a4e2abcce666d5a1af6f0e2ad",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1172,
+      "sha256": "248d29cd5937750c4a38582277e7c4cb2a086abe62e868aead536b240536e888"
+    },
+    {
+      "path": "knowledge/gotchas.md",
+      "chars": 2100,
+      "sha256": "18910f684effc16cd30bd0235bdfacea8d640b93ddd510a44bd8a1f2690484e7"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 948,
+      "sha256": "a6ee4817deedf1841ad0a3dda58c4f121af98fd9518a512c3a9d81464ce1dad3"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 1050,
+      "sha256": "f6c1b8873061040dd0aa3f1503eb61568db403114b7f6eadba6629911f20a13d"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 814,
+      "sha256": "212b7e26b4c95a7e0ff013bdbbe71cdb35568b37af29601e48d8336db855c6a3"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Context",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "# Commands",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md",
+        "knowledge/gotchas.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Known Divergence and Gotchas",
+      "sources": [
+        "knowledge/gotchas.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid module graph of CLI/logger/store/api-client",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient takes optional baseUrl constructor arg but index.js always constructs it with no argument, so the hardcoded default is always used",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js holds settings in a module-level Map — state is process-global and lost on restart, no persistence layer",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "The whole repo is 4 source files plus one test file, package.json declares two scripts (npm start, npm test)",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Read gotchas before touching anything under src/",
+      "reason": "redundant-with"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "Test files mirror src/<module>.js they cover, e.g. test/logger.test.js tests src/logger.js",
+      "reason": "redundant-with"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2976,
+  "lines": 34,
+  "overTarget": false,
+  "generatedAt": "2026-09-24T13:39:15.367Z"
+}
