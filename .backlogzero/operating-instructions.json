@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "0d0e87ede4374cc9a4984130eae96ca80e698a27b4beb6bb8817a51d30f931c1",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1006,
+      "sha256": "26290973169c188295003adcf952477016e987afe1e25c8d69267394da0946f8"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1129,
+      "sha256": "a646ae9214439201c0396c32b6c6b7705993e4278814dac7f7ba762739b4122b"
+    },
+    {
+      "path": "conventions/code-style.md",
+      "chars": 773,
+      "sha256": "cda40cbf2f988b29f8b3016ae493f11eec726b920005bdbacad8a8f55abe5b97"
+    },
+    {
+      "path": "conventions/ingested-claude.md",
+      "chars": 664,
+      "sha256": "74b2f213513fa90a6d0c2b5f3507c09f39e630cdbfb632fa9533924b05acb695"
+    },
+    {
+      "path": "conventions/pr-process.md",
+      "chars": 300,
+      "sha256": "a0242a595455941d85902156769bc7706c21d0975994fcc9acd4715b999df7d2"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 450,
+      "sha256": "f99382f9f4025fec6e4fb022c31e43ef36ddd80c4776404e1fe42ae642942a16"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Code Style",
+      "sources": [
+        "conventions/code-style.md"
+      ]
+    },
+    {
+      "heading": "# FIXTURE NOTE Comments",
+      "sources": [
+        "conventions/code-style.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Known Documentation Drift",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# PR Requirements",
+      "sources": [
+        "conventions/ingested-claude.md",
+        "conventions/pr-process.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "module graph / mermaid flowchart of src/index.js, logger.js, store.js, api-client.js and the upstream API call",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js has no persistence and boots with three defaults: notifications.enabled, board.columns, retention.days",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "api-client.js retries fetch up to 3 times with exponential backoff before throwing",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Tests: npm test (Node's built-in node --test runner, no external test framework)",
+      "reason": "redundant-with",
+      "detail": "Testing section (conventions/testing.md) states the same rule in more detail"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "there is currently one test file, covering only src/logger.js's setLevel; api-client.js and store.js have no tests yet",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "conventions/ingested-claude.md",
+      "rule": "italicized note explaining the rule was 'Planted by j06.2 to force a deterministic iteration-1 rejection' and will be 'removed in test cleanup'",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "conventions/pr-process.md",
+      "rule": "RELEASE_NOTES.md exists pre-seeded with an empty ## Unreleased section",
+      "reason": "redundant-with",
+      "detail": "PR Requirements section already instructs appending under the existing ## Unreleased heading, which implies it already exists"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2098,
+  "lines": 1,
+  "overTarget": false,
+  "generatedAt": "2026-09-25T06:42:13.986Z"
+}
