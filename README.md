@@ -31,3 +31,7 @@ npm start -- --help
 
 Environment variables are read in `src/config.ts`. See that file for the
 current list.
+
+## Notes
+
+- Code-review canary for PT-2286: mugkt7b6-0qvj.
