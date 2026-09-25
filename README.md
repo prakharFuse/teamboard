@@ -31,3 +31,4 @@ npm start -- --help
 
 Environment variables are read in `src/config.ts`. See that file for the
 current list.
+<!-- journey-test marker 2026-09-25T07:28:04.520Z -->

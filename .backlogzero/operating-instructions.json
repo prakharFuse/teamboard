@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "84794ea98a03b7a0a016b1c70a0efbdf5ab1e9240369ff352b10a6d1a41c39d8",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1268,
+      "sha256": "60f9d2802d62557e3af5f2641da66b698890e8ffcc3fdcde8a525207efa93a2c"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1073,
+      "sha256": "ff45e33993189cb9e5849c3ecc9a789e80f9986f662d610add36c425e58fe9f5"
+    },
+    {
+      "path": "conventions/coding.md",
+      "chars": 1089,
+      "sha256": "0c1dd032da6149c937461d0f6b6f1d62e4ff71b7d3e008c54166983a9e9f5a58"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 629,
+      "sha256": "219d03b8e7c191e1a32b29ed8ba54c169e25dc7e00e7f61b7449753e20fa2094"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/coding.md"
+      ]
+    },
+    {
+      "heading": "# Commands",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Code Conventions",
+      "sources": [
+        "conventions/coding.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Architecture Gotchas",
+      "sources": [
+        "knowledge/architecture.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid flowchart of module call graph (CLI, logger, store, api-client, upstream API)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "\"Read that file first; this page only adds what it omits or gets wrong.\" (meta commentary on wiki page ordering)",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "\"No test file exercises api-client.js or store.js — see conventions-testing\" (cross-reference note)",
+      "reason": "redundant-with",
+      "detail": "covered directly in the Testing section"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2446,
+  "lines": 30,
+  "overTarget": false,
+  "generatedAt": "2026-09-25T07:47:22.626Z"
+}
