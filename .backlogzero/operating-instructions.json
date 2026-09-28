@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "61969aa62e863d8100cd8c550c305946d7478e968ffce44fcaf671719bf8d9a7",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1261,
+      "sha256": "0e71f768fe850892cef9846433706da73cfc8d803fb580220abd675582f028f1"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 2165,
+      "sha256": "998d332d9de49e42338b8c6d91a500e4e962b660d82fa5d876db3463fecacdc3"
+    },
+    {
+      "path": "conventions/fixture-notes.md",
+      "chars": 1856,
+      "sha256": "aa8dc004e0674c77b6c7d7c3f98ef2ff1b73ab7868c070a897755b1df45da6e3"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 1454,
+      "sha256": "dc87282ba6e80f10f27c2c734dc518152fde068fa2ef2bb737a4a12eef6c4a40"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Purpose",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# FIXTURE NOTE comments mark intentional gaps — don't fix without a matching ticket",
+      "sources": [
+        "conventions/fixture-notes.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# README vs. code divergence — trust the code",
+      "sources": [
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Testing",
+      "sources": [
+        "conventions/testing.md",
+        "conventions/fixture-notes.md"
+      ]
+    },
+    {
+      "heading": "# Gotchas",
+      "sources": [
+        "knowledge/architecture.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "mermaid module dependency graph and the full leaf-module edge list (CLI -> Logger/Store/ApiClient, ApiClient -> Logger -> Upstream)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "'There is no reverse edge: logger.js and store.js have no knowledge of each other or of index.js'",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "per-file line-by-line description of src/logger.js (4-level console logger, default 'info', warn/error to stderr) and src/store.js (Map-backed settings store)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "'There is no node_modules/ and no dependencies/devDependencies block in package.json at all: the project has zero npm dependencies today'",
+      "reason": "redundant-with",
+      "detail": "Zero npm dependencies line kept once under Repository Purpose"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "'Teamboard is not a product — see ../../README.md for the full framing'",
+      "reason": "redundant-with",
+      "detail": "Folded into the single Repository Purpose framing statement"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3633,
+  "lines": 33,
+  "overTarget": false,
+  "generatedAt": "2026-09-28T05:20:01.650Z"
+}
