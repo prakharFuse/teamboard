@@ -9,6 +9,7 @@
 import { logger, setLevel } from './logger.js';
 import { ApiClient } from './api-client.js';
 import { allSettings, getSetting } from './store.js';
+import { buildExportRows } from './hr-export.js';
 
 function parseArgs(argv) {
   const opts = { command: 'status', verbose: false };
@@ -30,6 +31,7 @@ function printHelp() {
       'Commands:',
       '  status     show current settings',
       '  tasks      list the first page of tasks',
+      '  hr-export  export the member directory for BambooHR',
       '',
       'Options:',
       '  --verbose  include debug output',
@@ -58,6 +60,27 @@ async function main() {
     logger.debug('listing tasks', { retention: getSetting('retention.days') });
     const page = await client.listTasks(1);
     logger.info(`fetched ${Array.isArray(page) ? page.length : 0} task(s)`);
+    return;
+  }
+
+  if (opts.command === 'hr-export') {
+    const client = new ApiClient();
+    const members = [];
+    let page = 1;
+    for (;;) {
+      const batch = await client.listMembers(page);
+      if (!Array.isArray(batch)) break;
+      members.push(...batch);
+      if (batch.length < 50) break;
+      page += 1;
+    }
+    const { rows, rejections } = buildExportRows(members);
+    logger.info(`exported ${rows.length} member(s)`);
+    for (const rejection of rejections) {
+      const id = rejection.member?.id ?? rejection.member?.email ?? JSON.stringify(rejection.member);
+      logger.error(`rejected member ${id}: ${rejection.reason}`);
+    }
+    if (rejections.length > 0) process.exitCode = 1;
     return;
   }
 
