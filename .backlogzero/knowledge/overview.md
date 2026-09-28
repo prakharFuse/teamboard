@@ -4,7 +4,7 @@ description: What this repo is, its real scope, and why the code looks half-fini
 type: knowledge
 scope: global
 updated: 2026-09-28 (IONE-959)
-captured_sha: 18ba83de44f5251f500db381b15a7b931b7a0c52
+captured_sha: b42191474b6525053cef5db9ec09a07df66fcef9
 sources:
   - package.json
   - README.md
@@ -12,12 +12,14 @@ sources:
   - src/logger.js
   - src/store.js
   - src/api-client.js
+  - src/hr-export.js
   - test/logger.test.js
 sources_sha256:
   README.md: f904a61e1f2a6dc9b4f30ea4f883e1cddafcb46de99ddc54f340652fe45f1068
   package.json: b0f12c6eb22b4bf7edee1f38c9fca901725565667b3754749d6c6cdf874f0b6c
-  src/api-client.js: c44bb95a43cdf4ed0873db16cb31b8a3c2f39528ca13e0ed72dc9cd39b3dd01c
-  src/index.js: 9241d38dbfa7785b542423031a6c0f2b9b5a1942304c1fcec2555f1272caf82f
+  src/api-client.js: 7c1eab46f77cea85454e9bd6f821f2e803db8138ddf371a8e2c8265cf62b49e2
+  src/hr-export.js: 3afa8c4e63ccad976bc6daab65c203a86c9d2dd6bf51d8d8cb082c42a51aaa2f
+  src/index.js: caca8a6de6e4aa9c6403d8eca97c4fe3929ccfe053ac04d87f5204241ade6bea
   src/logger.js: a29b88a18c23737f5f9215512159f9cbfe4476eca88c6e5dfd895dc5cfc5920b
   src/store.js: 8f8528bccd22f7a8989e9df6bb7368e04f8678a5ecd44480ba3a0100189db4bc
   test/logger.test.js: c4eed64e2022370b3212b33c64de4cb744bdacb15b12e8900bcc172a045408fa
@@ -30,13 +32,13 @@ open PRs on.
 
 ## Actual surface (verified against code, not the README)
 
-The entire runtime is 4 files, ~120 lines total:
+The entire runtime is 5 files, ~270 lines total:
 
 - `src/index.js` — CLI entrypoint. `parseArgs` supports only `--verbose`,
-  `--help`/`-h`, and a positional command (`status`, `tasks`, else `help`
-  fallthrough on unknown command → exit code 1). There is **no `--quiet` flag
-  yet** despite `src/logger.js`'s comment implying one is expected — that flag
-  is unimplemented, not just undocumented.
+  `--help`/`-h`, and a positional command (`status`, `tasks`, `hr-export`,
+  else `help` fallthrough on unknown command → exit code 1). There is **no
+  `--quiet` flag yet** despite `src/logger.js`'s comment implying one is
+  expected — that flag is unimplemented, not just undocumented.
 - `src/logger.js` — 4-level console logger (`debug`/`info`/`warn`/`error`),
   default level `'info'`, warn/error go to stderr.
 - `src/store.js` — in-memory `Map`-backed settings store, module-level
@@ -45,7 +47,21 @@ The entire runtime is 4 files, ~120 lines total:
 - `src/api-client.js` — `ApiClient` wraps `fetch` against a hardcoded
   `https://api.teamboard.example.com/v1` base URL, with 3 retries, a 15000ms
   per-attempt timeout, and `250 * 2 ** attempt` backoff, all inlined as
-  literals rather than named constants or config.
+  literals rather than named constants or config. Now has two list methods:
+  `listTasks(page)` and `listMembers(page)`, both hardcoding `per_page=50`.
+- `src/hr-export.js` — export-time department normalisation for the
+  BambooHR export (`normalizeDepartment`, `buildExportRows`). Normalises on
+  the way out only; the stored `member.department` value is never rewritten.
+  Ships a fixed alias table (`eng`/`engg` → `Engineering`,
+  `human resources` → `HR`, `it` → `Operations`, `product & design` →
+  `Product`) agreed with HR in March 2026 — unmapped values are rejected, not
+  fuzzy-matched, and `buildExportRows` partitions a member batch into `rows`
+  and `rejections` rather than throwing on the first bad member.
+
+The `hr-export` CLI command (`src/index.js:66-84`) pages through
+`ApiClient.listMembers` until a short batch, runs everything through
+`buildExportRows`, logs one line per rejection, and sets `process.exitCode =
+1` if any member was rejected.
 
 ## Divergences from README.md
 
