@@ -42,4 +42,9 @@ export class ApiClient {
     // Page size: a magic number.
     return this.request(`/tasks?page=${page}&per_page=50`);
   }
+
+  async listMembers(page) {
+    // Page size: a magic number.
+    return this.request(`/members?page=${page}&per_page=50`);
+  }
 }

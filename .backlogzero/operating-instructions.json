@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "4096b88b52b9c8c3c673ec1a292f038f55afe941d2d6f9c1f5d58415345ec956",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1894,
+      "sha256": "4c1275836a02110841b377cd71eca252e19c392ba4cd552d02a68a779f51fbb3"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 3093,
+      "sha256": "aac3e16ad492cc2cba7b815fef3bcffaa039feed7a763064d5da2ff8a1f8daa7"
+    },
+    {
+      "path": "conventions/fixture-notes.md",
+      "chars": 1856,
+      "sha256": "aa8dc004e0674c77b6c7d7c3f98ef2ff1b73ab7868c070a897755b1df45da6e3"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 1531,
+      "sha256": "ace1074f546ffaeb595c9de121261f887cb84cbb8de1c5bc572180722a3b0691"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Repository Purpose",
+      "sources": [
+        "knowledge/overview.md",
+        "conventions/fixture-notes.md"
+      ]
+    },
+    {
+      "heading": "## Known intentional gaps (do not \"fix\" unless assigned)",
+      "sources": [
+        "conventions/fixture-notes.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Environment quirks",
+      "sources": [
+        "knowledge/architecture.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "## Testing",
+      "sources": [
+        "conventions/testing.md",
+        "conventions/fixture-notes.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Mermaid module dependency graph (CLI -> Logger/Store/ApiClient/HrExport -> Upstream)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient is only constructed inside main()'s tasks and hr-export command branches",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "the hr-export command paginates client.listMembers(page) itself, looping until a short batch",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "src/hr-export.js is a leaf module with no imports at all, pure data transformation",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient imports logger directly rather than receiving it injected",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "logger.js, store.js, and hr-export.js are leaf modules with no reverse edges",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "The entire runtime is 5 files, ~270 lines total (file-by-file breakdown of index.js/logger.js/store.js/api-client.js/hr-export.js behavior)",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "parseArgs supports only --verbose, --help/-h, and a positional command",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "logger.js is a 4-level console logger, default level 'info', warn/error go to stderr",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "ApiClient has 3 retries, 15000ms timeout, 250 * 2 ** attempt backoff, listTasks(page) and listMembers(page) with per_page=50",
+      "reason": "redundant-with",
+      "detail": "kept as 'hardcoded baseUrl, region, retry count, timeout, backoff formula, and page size' under Known intentional gaps"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "hr-export.js's fixed alias table (eng/engg -> Engineering, human resources -> HR, it -> Operations, product & design -> Product) agreed with HR in March 2026, buildExportRows partitions into rows/rejections",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "The hr-export CLI command logs one line per rejection and sets process.exitCode = 1 if any member was rejected",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "conventions/fixture-notes.md",
+      "rule": "test/logger.test.js carries its own FIXTURE NOTE explaining it's the landing spot for the --quiet ticket's test requirement",
+      "reason": "redundant-with",
+      "detail": "covered by the general 'extend that file for new coverage' testing rule and the --quiet fixture-note entry"
+    }
+  ],
+  "conflicts": [],
+  "chars": 3063,
+  "lines": 28,
+  "overTarget": false,
+  "generatedAt": "2026-09-28T05:28:23.003Z"
+}
