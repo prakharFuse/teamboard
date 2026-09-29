@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "sourceHash": "108c05211ba5944335ded721a08ebc3a94c508628e18f044075f31722bd4ac21",
+  "promptVersion": 2,
+  "sources": [
+    {
+      "path": "knowledge/architecture.md",
+      "chars": 1187,
+      "sha256": "1b6202d677127425b9eb5186e75d8e96644a38716b6d81770861dc6b6b301d73"
+    },
+    {
+      "path": "knowledge/fixture-invariants.md",
+      "chars": 1626,
+      "sha256": "ce84dc6982e777c52a9b2977af3cbf9ff0c6b4ac9f21f6edce83b032ea53383e"
+    },
+    {
+      "path": "knowledge/overview.md",
+      "chars": 1087,
+      "sha256": "22087d2bc514301e87fffc50dacaef8d6e3b9171ff81f41948c0328f10379a81"
+    },
+    {
+      "path": "conventions/testing.md",
+      "chars": 687,
+      "sha256": "6639aad14ac1ea584e108faf164db777197223da2741fef932be782d8c0915b3"
+    }
+  ],
+  "provenance": [
+    {
+      "heading": "# Project Overview",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/architecture.md"
+      ]
+    },
+    {
+      "heading": "# Running & Testing",
+      "sources": [
+        "conventions/testing.md",
+        "knowledge/overview.md"
+      ]
+    },
+    {
+      "heading": "# Do Not \"Fix\" These Fixture Invariants",
+      "sources": [
+        "knowledge/fixture-invariants.md",
+        "conventions/testing.md"
+      ]
+    },
+    {
+      "heading": "# Known Documentation Divergence",
+      "sources": [
+        "knowledge/overview.md",
+        "knowledge/fixture-invariants.md"
+      ]
+    }
+  ],
+  "drops": [
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "Full module dependency graph / mermaid flowchart of CLI, Logger, ApiClient, Store, Upstream",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "store.js and api-client.js never import each other; only shared dependency is logger.js; index.js is sole wiring point",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/architecture.md",
+      "rule": "ApiClient takes an optional baseUrl constructor arg but index.js always constructs it with no argument, so the hardcoded default is what actually runs",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/fixture-invariants.md",
+      "rule": "Every item is deliberate, called out by an inline FIXTURE NOTE comment in the file itself",
+      "reason": "derivable-from-code"
+    },
+    {
+      "source": "knowledge/overview.md",
+      "rule": "Full explanation of purpose, re-seeding, and usage lives in README.md",
+      "reason": "not-always-applicable"
+    },
+    {
+      "source": "conventions/testing.md",
+      "rule": "New tests should follow the same shape as test/logger.test.js rather than introducing a new framework or directory layout",
+      "reason": "redundant-with",
+      "detail": "Add new tests in the same flat-file, strict-assert style"
+    }
+  ],
+  "conflicts": [],
+  "chars": 2867,
+  "lines": 27,
+  "overTarget": false,
+  "generatedAt": "2026-09-29T06:32:11.747Z"
+}
