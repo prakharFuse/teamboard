@@ -171,3 +171,58 @@ repository and check it against the list below.
 
 **Explicit status:** PR #60 was **not reviewed**, and **no root cause was
 confirmed** for either escalation in this investigation.
+
+## Acceptance criteria disposition
+
+| AC | Status | Reason |
+| --- | --- | --- |
+| BambooHR sync completes without error for all 4 affected customers; no records silently dropped | Blocked | No BambooHR pipeline exists in this repo to fix or run. |
+| A test covers the specific BambooHR failure condition and asserts correct handling | Blocked | A meaningful regression test needs the real failing code path; a test against invented code proves nothing. |
+| Deactivation terminates the SSO session within the defined window (suggested 15 minutes), enforced in code | Blocked | No member deactivation path exists in this repo. |
+| A test asserts that deactivation triggers the SSO deprovisioning (or SCIM/webhook) dispatch | Blocked | Same reason: no deactivation or SSO dispatch code exists here to test. |
+| PR #60 is reviewed and merged, or superseded by a PR covering both issues | Blocked | PR #60 is not visible from this checkout (no remote, no PR refs). |
+| No regression in onboarding, role updates and reactivation (existing suite green) | N/A in this repo | These flows don't exist here; the green `npm test` (2 logger tests) is not evidence for them. |
+| Audit of other recently departed members completed and documented | Blocked | No member or audit data exists here; the audit must run in the owning system. |
+
+## Adjacent observations
+
+`ApiClient.request()` in `src/api-client.js` has two retry behaviours to avoid
+in any future HR or IdP client:
+
+- **It retries every error, including 4xx.** Any non-OK response throws
+  `HTTP ${status}`, and the catch-all retries it. A 401 caused by token expiry
+  would be retried three times and then surface only as `HTTP 401`, with no
+  hint that re-authentication is needed. An HR/IdP client should fail fast on
+  4xx (refreshing the token on 401) and retry only on network errors, timeouts,
+  429 and 5xx.
+- **It sleeps after the final attempt.** The backoff (`250 * 2 ** attempt` ms)
+  runs even when no attempt is left, so the caller waits for nothing before the
+  error is thrown.
+
+This is **not connected to either escalation**: this client only calls the
+fixture task API (`listTasks`) and never calls BambooHR or an IdP. The file is
+intentionally left unchanged, per its FIXTURE NOTE and
+`.backlogzero/knowledge/fixture-invariants.md`.
+
+## Open questions & recommended next steps
+
+Prioritized, so a PM can turn each item into a ticket:
+
+1. **Re-target this ticket.** Identify the repository/service that owns member
+   lifecycle (BambooHR sync, member removal, IdP sync) and move TEAM-6 there.
+   Carry over its functional requirements and test plan.
+2. **Review PR #60.** Get its diff from the owning repository and review it
+   against the checklist in "PR #60 review status" above.
+3. **Run the departure-vs-revocation audit now (interim mitigation).** Query
+   the owning system for members whose SSO revocation is missing or later than
+   their departure, and revoke any hits manually in the IdP. Hand the runbook
+   off to on-call with step-by-step instructions.
+4. **Confirm which IdP(s) are involved** in the SSO gap, and whether it happens
+   with every supported IdP or only some.
+5. **Obtain consent and anonymised BambooHR payloads** for Customers A–D so
+   each failure condition can be reproduced and catalogued.
+6. **Isolate the staging IdP integration** before replaying any payloads, so a
+   BambooHR replay cannot change test accounts' SSO state.
+7. **Loop in security and legal** now to assess SOC 2 and contractual
+   obligations arising from the roughly 3-week retention; don't wait for the
+   full RCA.
