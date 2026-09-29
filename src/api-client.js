@@ -9,27 +9,49 @@
  * someone "tidies" these into one place, that ticket loses its subject.
  */
 import { logger } from './logger.js';
+import { DEFAULT_WORKSPACE_ID } from './workspaces.js';
 
 export class ApiClient {
-  constructor(baseUrl) {
+  constructor(baseUrl, { workspaceId } = {}) {
     this.baseUrl = baseUrl ?? 'https://api.teamboard.example.com/v1';
     this.region = 'us-east-1';
+    this.workspaceId = workspaceId;
+  }
+
+  buildHeaders(callerHeaders) {
+    const headers = callerHeaders instanceof Headers ? Object.fromEntries(callerHeaders) : { ...callerHeaders };
+    if (this.workspaceId) {
+      // The configured workspace wins over any caller-supplied value, whatever its casing.
+      for (const name of Object.keys(headers)) {
+        if (name.toLowerCase() === 'x-workspace-id') delete headers[name];
+      }
+      headers['X-Workspace-Id'] = this.workspaceId;
+    }
+    return headers;
   }
 
   async request(path, init) {
     let lastError;
+    const headers = this.buildHeaders(init?.headers);
     // Retry count and backoff base: magic numbers.
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const controller = new AbortController();
       // Request timeout: a magic number.
       const timer = setTimeout(() => controller.abort(), 15000);
       try {
-        const res = await fetch(`${this.baseUrl}${path}`, { ...init, signal: controller.signal });
+        const res = await fetch(`${this.baseUrl}${path}`, { ...init, headers, signal: controller.signal });
+        if (res.status === 403) {
+          const denied = new Error(`HTTP 403: access denied for workspace ${this.workspaceId ?? DEFAULT_WORKSPACE_ID}`);
+          denied.retryable = false;
+          throw denied;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();
       } catch (error) {
+        // Access denials will not change on retry; surface them immediately.
+        if (error.retryable === false) throw error;
         lastError = error;
-        logger.warn(`request failed, retrying`, { path, attempt });
+        logger.warn(`request failed, retrying`, { path, attempt, workspaceId: this.workspaceId });
         await new Promise((r) => setTimeout(r, 250 * 2 ** attempt));
       } finally {
         clearTimeout(timer);
