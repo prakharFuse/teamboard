@@ -9,11 +9,15 @@
  * someone "tidies" these into one place, that ticket loses its subject.
  */
 import { logger } from './logger.js';
+import { getWorkspace } from './workspaces.js';
 
 export class ApiClient {
-  constructor(baseUrl) {
+  constructor(baseUrl, options = {}) {
     this.baseUrl = baseUrl ?? 'https://api.teamboard.example.com/v1';
     this.region = 'us-east-1';
+    // No workspace means no X-Workspace-Id header, so the server's Parent Co
+    // fallback serves legacy callers unchanged.
+    this.workspaceId = options.workspaceId === undefined ? undefined : getWorkspace(options.workspaceId).id;
   }
 
   async request(path, init) {
@@ -24,7 +28,15 @@ export class ApiClient {
       // Request timeout: a magic number.
       const timer = setTimeout(() => controller.abort(), 15000);
       try {
-        const res = await fetch(`${this.baseUrl}${path}`, { ...init, signal: controller.signal });
+        const reqInit =
+          this.workspaceId === undefined
+            ? { ...init, signal: controller.signal }
+            : {
+                ...init,
+                headers: { ...(init?.headers ?? {}), 'X-Workspace-Id': this.workspaceId },
+                signal: controller.signal,
+              };
+        const res = await fetch(`${this.baseUrl}${path}`, reqInit);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json();
       } catch (error) {

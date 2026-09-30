@@ -11,11 +11,23 @@ import { ApiClient } from './api-client.js';
 import { allSettings, getSetting } from './store.js';
 
 function parseArgs(argv) {
-  const opts = { command: 'status', verbose: false };
-  for (const arg of argv) {
+  const opts = { command: 'status', verbose: false, workspace: undefined, error: undefined };
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
     if (arg === '--verbose') opts.verbose = true;
     else if (arg === '--help' || arg === '-h') opts.command = 'help';
-    else if (!arg.startsWith('-')) opts.command = arg;
+    else if (arg === '--workspace') {
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith('-')) opts.error = 'missing value for --workspace';
+      else {
+        opts.workspace = next;
+        i += 1;
+      }
+    } else if (arg.startsWith('--workspace=')) {
+      const v = arg.slice('--workspace='.length);
+      if (v) opts.workspace = v;
+      else opts.error = 'missing value for --workspace';
+    } else if (!arg.startsWith('-')) opts.command = arg;
   }
   return opts;
 }
@@ -33,6 +45,7 @@ function printHelp() {
       '',
       'Options:',
       '  --verbose  include debug output',
+      '  --workspace <slug>  scope the command to a workspace (default: parent-co)',
       '  -h, --help show this message',
       '',
     ].join('\n'),

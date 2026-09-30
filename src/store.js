@@ -1,12 +1,16 @@
 /**
- * In-memory settings store, global by design.
+ * In-memory settings store, partitioned by workspace.
  *
- * FIXTURE NOTE: the `tiers.complex` fixture issue asks an agent to migrate a
- * "legacy global settings store" to a per-tenant schema. This is that legacy
- * store — global keys, no tenant dimension, read and written from one place.
- * Keep it global; the migration is the ticket.
+ * Each workspace gets its own Map of overrides, keyed by the workspace's
+ * canonical id (a slug resolves to the same Map as its id). DEFAULTS is shared
+ * and read-only: reads fall back to it, writes never touch it. When no
+ * workspace is passed, calls resolve to Parent Co so legacy callers keep
+ * working for the one-quarter compatibility window; null, empty or unknown
+ * workspace ids throw rather than silently reading Parent Co data.
  */
-const settings = new Map();
+import { getWorkspace, PARENT_CO_WORKSPACE_ID } from './workspaces.js';
+
+const settingsByWorkspace = new Map();
 
 const DEFAULTS = {
   'notifications.enabled': 'true',
@@ -14,14 +18,24 @@ const DEFAULTS = {
   'retention.days': '30',
 };
 
-export function getSetting(key) {
-  return settings.get(key) ?? DEFAULTS[key];
+function mapFor(workspaceId = PARENT_CO_WORKSPACE_ID) {
+  const { id } = getWorkspace(workspaceId);
+  if (!settingsByWorkspace.has(id)) settingsByWorkspace.set(id, new Map());
+  return settingsByWorkspace.get(id);
 }
 
-export function setSetting(key, value) {
-  settings.set(key, value);
+export function getSetting(key, workspaceId) {
+  return mapFor(workspaceId).get(key) ?? DEFAULTS[key];
 }
 
-export function allSettings() {
-  return { ...DEFAULTS, ...Object.fromEntries(settings) };
+export function setSetting(key, value, workspaceId) {
+  mapFor(workspaceId).set(key, value);
+}
+
+export function allSettings(workspaceId) {
+  return { ...DEFAULTS, ...Object.fromEntries(mapFor(workspaceId)) };
+}
+
+export function _resetForTests() {
+  settingsByWorkspace.clear();
 }
