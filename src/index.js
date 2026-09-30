@@ -9,6 +9,7 @@
 import { logger, setLevel } from './logger.js';
 import { ApiClient } from './api-client.js';
 import { allSettings, getSetting } from './store.js';
+import { getWorkspace, PARENT_CO_WORKSPACE_ID } from './workspaces.js';
 
 function parseArgs(argv) {
   const opts = { command: 'status', verbose: false, workspace: undefined, error: undefined };
@@ -61,14 +62,36 @@ async function main() {
     return;
   }
 
+  if (opts.error) {
+    logger.error(opts.error);
+    process.exitCode = 1;
+    return;
+  }
+
+  let workspace;
+  try {
+    workspace = getWorkspace(opts.workspace ?? PARENT_CO_WORKSPACE_ID);
+  } catch (error) {
+    logger.error(error.message, { workspace: opts.workspace });
+    process.exitCode = 1;
+    return;
+  }
+
   if (opts.command === 'status') {
-    logger.info('current settings', allSettings());
+    logger.debug('workspace', { workspace: workspace.slug });
+    logger.info('current settings', allSettings(workspace.id));
     return;
   }
 
   if (opts.command === 'tasks') {
-    const client = new ApiClient();
-    logger.debug('listing tasks', { retention: getSetting('retention.days') });
+    // No --workspace: send no header so the server's Parent Co fallback applies.
+    const client = new ApiClient(undefined, {
+      workspaceId: opts.workspace === undefined ? undefined : workspace.id,
+    });
+    logger.debug('listing tasks', {
+      workspace: workspace.slug,
+      retention: getSetting('retention.days', workspace.id),
+    });
     const page = await client.listTasks(1);
     logger.info(`fetched ${Array.isArray(page) ? page.length : 0} task(s)`);
     return;
