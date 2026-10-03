@@ -239,3 +239,75 @@ or on PR #60: across all Okta-integrated customers, list every departed member
 whose departure timestamp has no matching IdP revocation event. Revoke any
 matches manually in the IdP, then record the result in the PR description or a
 linked ticket comment, as the last AC requires.
+
+## Acceptance criteria status
+
+| # | TEAM-6 acceptance criterion | Status |
+|---|---|---|
+| 1 | BambooHR sync completes without error for all 4 affected customers; no records silently dropped | Unmet — requires owning service |
+| 2 | A test covers the specific BambooHR failure condition and asserts correct handling | Unmet — requires owning service |
+| 3 | Deactivation terminates the SSO session within a defined window (suggested: 15 min), enforced in the deactivation code path | Unmet — requires owning service |
+| 4 | A test asserts that deactivation triggers the SSO deprovision (SCIM/webhook) dispatch within the SLA | Unmet — requires owning service |
+| 5 | PR #60 reviewed and merged, or superseded by a PR covering both issues with a root-cause comment in code | Unmet — requires owning service |
+| 6 | No regression in onboarding, role-update and reactivation flows; existing suite green | Met for this repo: `npm test` passes 2/2; no src/test changes |
+| 7 | Audit of other recently departed members completed and documented | Unmet — requires owning service |
+
+Note on row 6: onboarding, role-update and reactivation flows **do not exist in
+this repository**. "Met" means only that this repo's existing suite (2
+`setLevel` cases in `test/logger.test.js`) still passes and that TEAM-6 changes
+no code. It says nothing about those flows in the owning service.
+
+## Open questions / evidence required
+
+1. **Affected customers:** who are Customer A–D, and has each one consented to
+   its logs and data being used for reproduction?
+2. **IdP scope:** which identity provider(s) are involved? Okta only, or also
+   Azure AD or Google Workspace?
+3. **Service boundaries:** do the BambooHR export and the SSO sync share a
+   lifecycle service, event bus or DB transaction, or are they separate
+   subsystems that fail in a similar way?
+4. **Unreported cases:** were there other departed-member SSO retentions that
+   were never escalated?
+5. **BambooHR job logs:** per-customer import job logs and rejected-row
+   reports for the failing runs.
+6. **Deactivation code path:** the actual `DELETE` / deactivate handler and the
+   Okta sync job source in the owning service.
+7. **Audit query:** the departed-member vs IdP-revocation query, and its result.
+8. **Deadline:** the agreed delivery date for the RCA and the fix, given
+   active customer impact. Is a parallel compliance or legal escalation needed?
+
+## Recommended next steps
+
+In priority order, for the team that owns `/api/members`. Each item can become a
+separate ticket.
+
+1. **Blast-radius audit and manual revocation (urgent).** Run the
+   departed-member vs IdP-revocation query across all Okta-integrated
+   customers, revoke any live accounts in the IdP by hand, and document the
+   result.
+2. **Replace the hard delete with a soft delete.** Deactivation should set
+   `is_active = 0` and apply the `deactivated-` email prefix, or call SCIM
+   deprovision directly. Add a test asserting that the deprovision signal is
+   emitted within the 15-minute SLA.
+3. **Validate department against a canonical list** on both create and update,
+   correct the seed data, and add tests that reject non-canonical values
+   (e.g. `Eng`) and accept canonical ones.
+4. **Pin the CSV export column order** to
+   `id,name,email,role,department,start_date,is_active` and add a test that
+   asserts it.
+5. **BambooHR replay test.** Replay anonymised failing payloads from Customer
+   A–D through the import pipeline in staging and assert that no row is
+   silently dropped.
+
+## Note on durability
+
+This repository is re-seeded from an upstream fixture pack on every
+provision, so edits made directly here are overwritten. Treat this file as a
+snapshot of the investigation at `18ba83d`. Keep the durable copy of these
+findings in the PR description or on the TEAM-6 Jira ticket.
+
+**Why no tests were added:** this repository has no member lifecycle, BambooHR
+or SSO code path for a test to exercise. A test against a fabricated
+`members` module would pass without touching the code where the incidents
+happened, and would give false confidence. The tests in *Recommended next
+steps* belong in the owning service.
