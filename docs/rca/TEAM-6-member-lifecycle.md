@@ -58,3 +58,69 @@ echo "exit=$?"
 
 Observed at `18ba83d`: **no output, exit code 1**. None of these terms appears
 anywhere in the source, the tests, the readme or the manifest.
+
+## Issue 1 — BambooHR import failures
+
+**Reported symptom** (summarised from the linked support issues; all customer,
+person and tenant identifiers have been left out on purpose):
+
+- BambooHR imports are rejecting rows for at least 4 customer environments
+  (called Customer A–D below).
+- The rejected rows carry non-canonical `department` values, for example `Eng`,
+  `Engg`, `Human Resources`, `IT` and `Product & Design`, where the importer
+  expects a value from a fixed canonical list.
+- Some files may also have their CSV columns shifted against the expected
+  header `id,name,email,role,department,start_date,is_active`. If so, values
+  land in the wrong field and get rejected or mis-mapped.
+
+**What this repository contains:** nothing on this path. The code that the
+support comments cite is not in this checkout:
+
+| Cited in support comments | Present at `18ba83d`? |
+|---|---|
+| `POST /api/members` | No |
+| `PATCH /api/members/:id` | No |
+| `GET /api/members/export` | No |
+| `server/src/db.ts` | No: there is no `server/` directory and no `.ts` file |
+| `members` table with an `is_active` column | No: there is no SQL, schema or migration |
+
+The repository has no HTTP server (no `createServer`, no `listen`, no
+framework) and no CSV parsing or writing code. `src/index.js` handles only the
+`help`, `status` and `tasks` commands.
+
+## Issue 2 — SSO retained after offboarding
+
+**Reported symptom** (summarised; identifiers left out on purpose):
+
+- An employee who had left a customer organisation kept working SSO access for
+  about 3 weeks after removal.
+- The member was removed with a hard `DELETE FROM members`. So no row with an
+  email prefixed `deactivated-` and no row with `is_active = 0` ever existed for
+  the nightly Okta sync to pick up. The sync had no record of the departure and
+  never revoked the IdP account.
+
+**What this repository contains:** nothing on this path. It has no
+`DELETE /api/members/:id` handler, no `members` table, no Okta, SCIM or webhook
+client, and no scheduled jobs. The only outbound call is `GET /tasks` (see
+*Scope inspected*).
+
+## Support hypotheses — unverified leads for the owning service
+
+The support team proposed the causes below. **None of them was verified here.**
+The code they refer to is not in this repository. Record them as leads for the
+team that owns `/api/members`, not as findings:
+
+1. **Missing department validation:** create and update accept free-text
+   `department` instead of checking it against a canonical list (Issue 1).
+2. **Wrong seed data:** the canonical department list or the seeded values
+   do not match what customers send (Issue 1).
+3. **CSV column order:** the export or import column order differs from
+   `id,name,email,role,department,start_date,is_active` (Issue 1).
+4. **Hard delete instead of soft delete:** removing a member deletes the row
+   instead of setting `is_active = 0` and adding the `deactivated-` prefix,
+   so the Okta sync never sees the departure (Issue 2).
+
+**Not examined:** no production logs, BambooHR job reports or IdP (Okta) audit
+logs were available or reviewed for this RCA. No names, email addresses, IP
+addresses or tenant slugs from the support attachments are reproduced in this
+document.
