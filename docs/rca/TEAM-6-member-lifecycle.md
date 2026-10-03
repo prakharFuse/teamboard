@@ -124,3 +124,74 @@ team that owns `/api/members`, not as findings:
 logs were available or reviewed for this RCA. No names, email addresses, IP
 addresses or tenant slugs from the support attachments are reproduced in this
 document.
+
+## Shared root cause verdict
+
+**NOT DETERMINABLE from this repository.**
+
+The support evidence points to one shared lifecycle surface: the `members`
+table and the `/api/members` API. Both issues would follow from two gaps in how
+that surface handles member state:
+
+- On write, `department` is stored as free text, which produces Issue 1's
+  non-canonical values and the rejected BambooHR rows.
+- On removal, the row is hard-deleted instead of being marked `is_active = 0`
+  with the `deactivated-` prefix, which hides the departure from the Okta sync
+  (Issue 2).
+
+That is a plausible shared cause, since both are failures to keep member state
+canonical and visible to downstream integrations. It cannot be confirmed or
+ruled out here because the surface itself is not in this checkout. The owning
+service has to settle it, using the code and the logs listed under *Open
+questions*.
+
+## Look-alike code paths ruled out
+
+Three modules in this repository could look relevant to the ticket's suggested
+failure modes ("auth expiry", "silent record drop", "status not persisted").
+Each was checked and ruled out.
+
+### (a) `src/api-client.js` — `ApiClient.request` (lines 19–39)
+
+- **It retries every failure, including 4xx.**
+  `` if (!res.ok) throw new Error(`HTTP ${res.status}`) `` (line 28) sits inside the `try` whose `catch`
+  (lines 30–33) records `lastError` and retries. A 401 is retried exactly like
+  a network error.
+- **It is bounded:** 3 attempts (line 22), backoff `250 * 2 ** attempt` ms,
+  i.e. 250, 500 and 1000 ms (line 33), and a 15000 ms per-attempt
+  `AbortController` timeout (line 25).
+- **It does not swallow errors.** After the loop it runs `throw lastError`
+  (line 38), so the caller always sees the final failure. In the CLI this
+  reaches the top-level `main().catch`, which logs `fatal` and sets
+  `process.exitCode = 1`.
+- **It serves only `/tasks`.** Its one caller is `listTasks` (line 43). It never
+  touches BambooHR, an IdP or member data.
+- Its hardcoded URL, region, retry count, backoff and timeout are deliberate
+  subject matter for the separate config-audit fixture ticket.
+
+**Ruled out** as the "auth expiry" or "silent drop" cause.
+
+### (b) `src/store.js` — global settings store
+
+- It is an in-process `Map` that holds 3 string `DEFAULTS`
+  (`notifications.enabled`, `board.columns`, `retention.days`) and is lost
+  when the process exits.
+- It holds no member records and no tenant records.
+- `setSetting()` (line 21) has no callers in `src/` or `test/`
+  (`grep -rn setSetting src test` matches only its definition). The only reads
+  are `allSettings()` and `getSetting('retention.days')` in `src/index.js`.
+- Its global, tenant-less design is deliberate subject matter for the separate
+  tenant-migration fixture ticket.
+
+**Ruled out:** it cannot persist, or lose, member status.
+
+### (c) `src/logger.js` — console logger
+
+- It writes only to `process.stdout` / `process.stderr` (lines 23–24). It has
+  no external sink, audit trail or event bus that could carry lifecycle events
+  to BambooHR or an IdP.
+
+**Ruled out.**
+
+**None of these fixture defects is changed by this ticket.** TEAM-6 makes no
+changes to `src/`, `test/` or `package.json`.
