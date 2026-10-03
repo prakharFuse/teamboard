@@ -195,3 +195,47 @@ Each was checked and ruled out.
 
 **None of these fixture defects is changed by this ticket.** TEAM-6 makes no
 changes to `src/`, `test/` or `package.json`.
+
+## PR #60 status
+
+**Not reviewed.** This checkout is the working branch
+`queuezero/execute-plan-team-6-…` at `18ba83d`, which was provisioned from
+`main`. `git for-each-ref` lists only that branch: there is no local `main`, no
+`refs/pull/*` and no PR #60 head, so the PR diff could not be read.
+
+Review checklist for whoever picks up PR #60:
+
+- [ ] **Target:** which repository or service does it change? If it is
+      `prakharFuse/teamboard`, it would have to add the `/api/members` surface,
+      because that surface does not exist at `18ba83d`.
+- [ ] **Coverage:** does it fix the department-validation / export path
+      (Issue 1), the deactivation → SSO path (Issue 2), or both?
+- [ ] **Root-cause comment:** is the root cause written up in a code comment,
+      as an AC requires?
+- [ ] **Deprovision test:** is there a test asserting that deactivating a
+      member dispatches the SSO/SCIM deprovision call, or sets `is_active = 0`
+      and the `deactivated-` prefix, within the 15-minute SLA?
+- [ ] **Department test:** is there a test that rejects a non-canonical
+      department (e.g. `Eng`) and accepts a canonical one, on both create and
+      update?
+- [ ] **CSV order test:** is there an assertion that pins the export column
+      order to `id,name,email,role,department,start_date,is_active`?
+- [ ] **Existing rows:** do already-deactivated rows stay in the export and
+      drop out of the active directory view?
+- [ ] **Regressions:** are onboarding (BambooHR import of new hires), role
+      changes and reactivation covered by tests that still pass?
+
+## Blast-radius / audit status
+
+**Not performed.** The member, BambooHR and IdP data is not reachable from this
+environment.
+
+> **Active security risk.** SSO access lasted about 3 weeks after a departure.
+> If the cause is a hard delete that never reaches the IdP sync, other departed
+> members may still have live SSO access right now.
+
+The owning system should run this audit **now**, without waiting on this repo
+or on PR #60: across all Okta-integrated customers, list every departed member
+whose departure timestamp has no matching IdP revocation event. Revoke any
+matches manually in the IdP, then record the result in the PR description or a
+linked ticket comment, as the last AC requires.
