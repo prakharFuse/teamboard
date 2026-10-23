@@ -6,11 +6,13 @@
  * only because this module has a level concept and `src/index.js` has an arg
  * parser — keep both.
  */
+import { DEFAULTS } from './config.js';
+
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
 
-// Hardcoded default. One of the values the config-centralisation fixture is
-// expected to find.
-let currentLevel = 'info';
+// Initial level comes from src/config.js; index.js applies the runtime
+// override (env var, then --verbose) via setLevel.
+let currentLevel = DEFAULTS.log.level;
 
 export function setLevel(level) {
   if (!(level in LEVELS)) throw new Error(`Unknown log level: ${level}`);

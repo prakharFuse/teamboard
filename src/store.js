@@ -8,6 +8,9 @@
  */
 const settings = new Map();
 
+// User-editable, store-backed application settings (string values read through
+// getSetting/setSetting), not deployment config — so they stay inline here and
+// are not env-overridable. Deployment config lives in src/config.js.
 const DEFAULTS = {
   'notifications.enabled': 'true',
   'board.columns': 'todo,doing,done',

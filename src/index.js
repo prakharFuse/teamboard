@@ -8,6 +8,7 @@
  */
 import { logger, setLevel } from './logger.js';
 import { ApiClient } from './api-client.js';
+import { loadConfig } from './config.js';
 import { allSettings, getSetting } from './store.js';
 
 function parseArgs(argv) {
@@ -35,12 +36,16 @@ function printHelp() {
       '  --verbose  include debug output',
       '  -h, --help show this message',
       '',
+      'Environment: TEAMBOARD_* variables, see README Configuration',
+      '',
     ].join('\n'),
   );
 }
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
+  const config = loadConfig();
+  setLevel(config.log.level);
   if (opts.verbose) setLevel('debug');
 
   if (opts.command === 'help') {
@@ -54,7 +59,7 @@ async function main() {
   }
 
   if (opts.command === 'tasks') {
-    const client = new ApiClient();
+    const client = new ApiClient(config.api);
     logger.debug('listing tasks', { retention: getSetting('retention.days') });
     const page = await client.listTasks(1);
     logger.info(`fetched ${Array.isArray(page) ? page.length : 0} task(s)`);
